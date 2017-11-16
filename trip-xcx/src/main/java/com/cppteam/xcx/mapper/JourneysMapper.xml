@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cppteam.xcx.mapper.JourneysMapper">
+    <resultMap id="BaseResultMap" type="com.cppteam.xcx.pojo.JoinedJourney">
+    <id column="id" jdbcType="CHAR" property="id" />
+    <result column="nickname" jdbcType="VARCHAR" property="nickname" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+    <result column="avatar_thumb" jdbcType="VARCHAR" property="avatarThumb" />
+    <result column="journeyId" jdbcType="CHAR" property="journeyId" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="day_num" jdbcType="INTEGER" property="dayNum" />
+    <result column="img" jdbcType="VARCHAR" property="img" />
+    <result column="img_thumb" jdbcType="VARCHAR" property="imgThumb" />
+    <result column="join_time" property="joinTime" jdbcType="TIMESTAMP" />
+    <collection property="followers" column="id" select="com.cppteam.xcx.mapper.FollowersMapper.getFollowersByTripId" />
+    </resultMap>
+
+    <select id="getJourneysByUserId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        sponsor.id,
+        `user`.nickname,
+        `user`.avatar,
+        `user`.avater_thumb,
+        journey.id AS journeyId,
+        journey.`name`,
+        journey.day_num,
+        journey.img,
+        journey.img_thumb,
+        sponsor.sponsor_time AS join_time
+        FROM
+            sponsor
+        LEFT JOIN journey ON
+            `sponsor`.journey_id = `journey`.id
+        LEFT JOIN `user` ON
+            sponsor.user_id = `user`.id
+        WHERE
+            sponsor.user_id = #{userId}
+        UNION
+        SELECT
+        sponsor.id,
+        `user`.nickname,
+        `user`.avatar,
+        `user`.avater_thumb,
+        journey.id AS journeyId,
+        journey.`name`,
+        journey.day_num,
+        journey.img,
+        journey.img_thumb,
+        follower.join_time
+        FROM
+        follower
+        LEFT JOIN `sponsor` ON sponsor.id = follower.sponsor_id
+        LEFT JOIN journey ON sponsor.journey_id = journey.id
+        LEFT JOIN `user` ON sponsor.user_id = `user`.id
+        WHERE
+        follower.user_id = #{userId}
+        ORDER BY join_time DESC
+    </select>
+
+</mapper>

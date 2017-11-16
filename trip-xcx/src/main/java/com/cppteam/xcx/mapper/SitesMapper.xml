@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cppteam.xcx.mapper.SitesMapper" >
+  <resultMap id="BaseResultMap" type="com.cppteam.pojo.Site" >
+
+    <id column="id" property="id" jdbcType="CHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="time" property="time" jdbcType="REAL" />
+    <result column="img" property="img" jdbcType="VARCHAR" />
+    <result column="count" property="count" jdbcType="INTEGER" />
+    <result column="img_thumb" property="imgThumb" jdbcType="VARCHAR" />
+    <result column="tips" property="tips" jdbcType="LONGVARCHAR" />
+  </resultMap>
+
+  <select id="getSitesByDay" parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT
+	site.id,
+	site.count,
+	site.`name`,
+	site.img,
+	site.img_thumb,
+	site.time
+    FROM
+        site
+    LEFT JOIN `day` ON `day`.id = site.day_id
+    WHERE
+        `day`.id = #{dayId}
+	ORDER BY site.count asc
+  </select>
+</mapper>

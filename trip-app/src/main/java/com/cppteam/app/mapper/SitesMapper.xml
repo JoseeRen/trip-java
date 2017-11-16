@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cppteam.app.mapper.SitesMapper" >
+  <insert id="batchInsert" parameterType="java.util.List" >
+      INSERT INTO site (
+      `site`.`id`,
+      `site`.`name`,
+      `site`.`tips`,
+      `site`.`time`,
+      `site`.`count`,
+      `site`.`img`,
+      `site`.`img_thumb`,
+      `site`.`day_id`
+    )
+    VALUES
+      <foreach collection="list" item="site" index="index" separator=",">
+        (
+        #{site.id},
+        #{site.name},
+        #{site.tips},
+        #{site.time},
+        #{site.count},
+        #{site.img},
+        #{site.imgThumb},
+        #{site.dayId}
+        )
+      </foreach>
+    </insert>
+</mapper>

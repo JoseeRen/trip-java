@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cppteam.xcx.mapper.FollowersMapper" >
+  <resultMap id="BaseResultMap" type="com.cppteam.xcx.pojo.Follower" >
+    <id column="id" property="id" jdbcType="CHAR" />
+    <result column="nickname" property="nickname" jdbcType="VARCHAR" />
+    <result column="avatar" property="avatar" jdbcType="VARCHAR" />
+    <result column="avater_thumb" property="avaterThumb" jdbcType="VARCHAR" />
+  </resultMap>
+  <select id="getFollowersByTripId" parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT
+	`user`.id,
+	`user`.nickname,
+	`user`.avatar,
+	`user`.avater_thumb
+FROM
+	follower
+-- LEFT JOIN sponsor ON sponsor.id = follower.sponsor_id
+LEFT JOIN `user` ON `user`.id = follower.user_id
+WHERE
+	follower.sponsor_id = #{tripId}
+ORDER BY
+	follower.join_time DESC
+  </select>
+</mapper>

@@ -1,0 +1,56 @@
+.idea/
+.metadata/
+.recommenders/
+RemoteSystemsTempFiles/
+mybatis-generator/
+
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# eclpse and intellij ieda
+/.settings/
+/target/
+/.idea/
+*.iml
+/.project
+
+/*/.settings/
+/*/.project
+/*/*iml
+/*/target/
+/*/.idea
+/*/*.iml
+
+/*/*/.settings/
+/*/*/.project
+/*/*/*iml
+/*/*/target/
+/*/*/.idea
+/*/*/*.iml
+
+# Eclipse project files
+.classpath
+.project
+.DS_Store
+/.metadata/
+/.recommenders/

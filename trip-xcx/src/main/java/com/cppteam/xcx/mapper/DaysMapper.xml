@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cppteam.xcx.mapper.DaysMapper" >
+  <resultMap id="BaseResultMap" type="com.cppteam.xcx.pojo.Day" >
+    <id column="id" property="id" jdbcType="CHAR" />
+    <result column="count" property="count" jdbcType="INTEGER" />
+    <collection property="sites" column="id" select="com.cppteam.xcx.mapper.SitesMapper.getSitesByDay" />
+  </resultMap>
+
+  <select id="getDaysByJourney" parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT
+	`day`.id,
+	`day`.count
+    FROM
+        `day`
+    LEFT JOIN journey ON `day`.journey_id = journey.id
+    WHERE
+        journey.id = #{journeyId}
+    ORDER BY `day`.count asc
+  </select>
+
+  <select id="getDayByTripId" parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT
+	`day`.id,
+	`day`.count
+        FROM
+            `day`
+        LEFT JOIN journey ON `day`.journey_id = journey.id
+        LEFT JOIN sponsor ON sponsor.journey_id = journey.id
+        WHERE
+            sponsor.id = #{tripId}
+        ORDER BY
+            `day`.count ASC
+  </select>
+</mapper>
