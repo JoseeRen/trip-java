@@ -29,32 +29,32 @@ public class LoginInterceptor implements HandlerInterceptor {
 			throws Exception {
 		
 //		// 假如访问的是开放接口，放行
-//		String uri = request.getRequestURI();
-//		if ("/xcx/login/getToken".equals(uri) || "/test".equals(uri)) {
-//			return true;
-//		}
-//
-//		// 需要验证登录
-//		String token = request.getHeader("Authorization");
-//
-//		if (StringUtils.isNoneBlank(token)) {
-//			TripResult res = loginService.checkLoginStatus(token);
-//			if (res.getStatus() == 200) {
-//
-//				return true;
-//			}
-//		}
-//
-//		// 验证失败，拦截请求并返回错误提示json
-//		response.setCharacterEncoding("utf-8");
-//		response.setContentType("application/json");
-//		PrintWriter out = response.getWriter();
-//		TripResult badResult = TripResult.build(403, "拒绝访问");
-//		out.print(JsonUtils.objectToJson(badResult));
-//		return false;
+		String uri = request.getRequestURI();
+		if ("/xcx/login/getToken".equals(uri) || "/test".equals(uri)) {
+			return true;
+		}
+
+		// 需要验证登录
+		String token = request.getHeader("Authorization");
+
+		if (StringUtils.isNoneBlank(token)) {
+			TripResult res = loginService.checkLoginStatus(token);
+			if (res.getStatus() == 200) {
+
+				return true;
+			}
+		}
+
+		// 验证失败，拦截请求并返回错误提示json
+		response.setCharacterEncoding("utf-8");
+		response.setContentType("application/json");
+		PrintWriter out = response.getWriter();
+		TripResult badResult = TripResult.build(403, "拒绝访问");
+		out.print(JsonUtils.objectToJson(badResult));
+		return false;
 
 		// 开发阶段全服放行
-		return true;
+//		return true;
 		
 	}
 
