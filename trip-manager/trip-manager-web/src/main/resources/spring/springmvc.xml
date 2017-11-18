@@ -22,7 +22,7 @@
     	<!--</mvc:interceptor>-->
     <!--</mvc:interceptors>-->
 	<!-- 配置静态资源 -->
-	<mvc:resources location="/layui/" mapping="/layui/**" />
+	<mvc:resources location="/layui/" mapping="/manager/layui/**" />
 	<mvc:resources location="/" mapping="/*.html" />
 
 	<!-- 视图解析器 -->

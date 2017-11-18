@@ -7,12 +7,14 @@
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"  %>
+<c:url var="serverUrl" value="https://journey.xiaokuango.com/" />
+<c:url var="baseUrl" value="https://journey.xiaokuango.com/manager" />
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>游记列表页</title>
-    <link rel="stylesheet" type="text/css" href="http://localhost:8083/layui/css/layui.css">
+    <link rel="stylesheet" type="text/css" href="${baseUrl}/layui/css/layui.css">
     <style>
         .layui-nav{
             border-radius: 0;
@@ -29,7 +31,7 @@
 <body>
     <!--header start-->
     <ul class="layui-nav" lay-filter="">
-        <li class="layui-nav-item"><a href="/">控制台</a></li>
+        <li class="layui-nav-item"><a href="${baseUrl}">控制台</a></li>
     </ul>
     <!--end header-->
 
@@ -51,7 +53,7 @@
             </thead>
         </table>
     </div>
-    <c:url var="layui" value="/layui/layui.js" />
+    <c:url var="layui" value="${baseUrl}/layui/layui.js" />
     <script src="${layui}"></script>
     <c:url var="jqueryResource" value="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js" />
     <script src="${jqueryResource}"></script>
@@ -118,7 +120,7 @@
         {{#  if (d.img == 'default') { }}
         无封面图片
         {{# } else { }}
-        <a target="_blank" href="http://192.168.229.133/{{d.img}}" class="layui-table-link">查看图片</a>
+        <a target="_blank" href="${serverUrl}{{d.img}}" class="layui-table-link">查看图片</a>
         {{# } }}
     </script>
 
@@ -142,7 +144,7 @@
         {{#  } else { }}
         <a class="layui-btn layui-btn-mini" lay-event="check">通过审核</a>
         {{# } }}
-        <a class="layui-btn layui-btn-mini" lay-event="view" href="/manager/journey/detail?journeyId={{d.id}}">查看详情</a>
+        <a class="layui-btn layui-btn-mini" lay-event="view" href="${serverUrl}manager/journey/detail?journeyId={{d.id}}">查看详情</a>
     </script>
 
 </body>

@@ -6,12 +6,14 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"  %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<c:url var="serverUrl" value="https://journey.xiaokuango.com/" />
+<c:url var="baseUrl" value="https://journey.xiaokuango.com/manager" />
 <html>
 <head>
     <meta charset="utf-8">
     <title>游记详情页</title>
-    <link rel="stylesheet" type="text/css" href="http://localhost:8083/layui/css/layui.css">
+    <link rel="stylesheet" type="text/css" href="${baseUrl}/layui/css/layui.css">
 
     <style>
         .layui-nav{
@@ -30,7 +32,7 @@
 
     <!--header start-->
     <ul class="layui-nav" lay-filter="">
-        <li class="layui-nav-item"><a href="/">控制台</a></li>
+        <li class="layui-nav-item"><a href="${baseUrl}">控制台</a></li>
     </ul>
     <!--end header-->
     <div class="layui-container">
@@ -43,6 +45,8 @@
     </div>
 
 
+    <c:url var="layui" value="${baseUrl}/layui/layui.js" />
+    <script src="${layui}"></script>
     <c:url var="jqueryResource" value="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js" />
     <script src="${jqueryResource}"></script>
     <script>
@@ -68,7 +72,7 @@
                 let html = ''
                 html += '<h1>游记标题：'+ trip.name +'</h1>'
                 html += '<h2>游记天数：'+ trip.dayNum +'</h2>'
-                html += '<img src="http://192.168.229.133/'+ trip.img +'">'
+                html += '<img src="${serverUrl}'+ trip.img +'">'
                 $('#tripBox').html(html);
 
                 let days = data.subordinates
@@ -94,7 +98,7 @@
                                 result += '<div class="layui-timeline-content layui-text">'
                                 result += '<h3 class="layui-timeline-title">'+ site.name +'</h3>'
                                 result += '<p>'
-                                result += '<img src="http://192.168.229.133/'+ site.img +'" />'
+                                result += '<img src="${serverUrl}'+ site.img +'" />'
                                 if (site.time != -1) {
                                     result += '<br>游玩时长： '+ site.time +'小时'
                                 }
