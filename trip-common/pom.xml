@@ -92,6 +92,12 @@
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
         </dependency>
+        <!--BouncyCastle是一个开源的加解密解决方案，主页在http://www.bouncycastle.org/-->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.55</version>
+        </dependency>
     </dependencies>
 
 </project>

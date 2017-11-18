@@ -10,4 +10,6 @@ import com.cppteam.common.util.TripResult;
 public interface LoginService {
 	public TripResult getToken(String code);
 	public TripResult checkLoginStatus(String token);
+
+    TripResult getToken1(String encryptedData, String iv, String code);
 }
