@@ -72,7 +72,10 @@
                 let html = ''
                 html += '<h1>游记标题：'+ trip.name +'</h1>'
                 html += '<h2>游记天数：'+ trip.dayNum +'</h2>'
-                html += '<img src="${serverUrl}'+ trip.img +'">'
+                // 游记是否有图片
+                if (trip.img !== 'default') {
+                    html += '<img src="${serverUrl}'+ trip.img +'">'
+                }
                 $('#tripBox').html(html);
 
                 let days = data.subordinates
@@ -98,8 +101,14 @@
                                 result += '<div class="layui-timeline-content layui-text">'
                                 result += '<h3 class="layui-timeline-title">'+ site.name +'</h3>'
                                 result += '<p>'
-                                result += '<img src="${serverUrl}'+ site.img +'" />'
-                                if (site.time != -1) {
+
+                                // 是否有图片
+                                if (site.img !== 'default') {
+                                    result += '<img src="${serverUrl}'+ site.img +'" />'
+                                }
+
+                                // 区分事件与地点
+                                if (site.time !== -1) {
                                     result += '<br>游玩时长： '+ site.time +'小时'
                                 }
                                 result += '<br>游玩攻略：' + site.tips

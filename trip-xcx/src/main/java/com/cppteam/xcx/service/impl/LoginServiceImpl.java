@@ -65,7 +65,7 @@ public class LoginServiceImpl implements LoginService {
 			criteria.andOpenidEqualTo(openid);
 			List<User> users = userMapper.selectByExample(userExample);
 
-			Map<String, String> token = new HashMap<String, String>();
+			Map<String, String> tokenMap = new HashMap<String, String>();
 			// 新使用用户
 			if (users.isEmpty()) {
 				String userId = IDGenerator.createUserId();
@@ -76,12 +76,12 @@ public class LoginServiceImpl implements LoginService {
 				user.setAvatar("default");
 				user.setAvaterThumb("default");
 				userMapper.insertSelective(user);
-				token.put("token", JWTUtil.generateToken(userId));
+				tokenMap.put("token", JWTUtil.generateToken(userId));
 			} else {
-				token.put("token", JWTUtil.generateToken(users.get(0).getId()));
+				tokenMap.put("token", JWTUtil.generateToken(users.get(0).getId()));
 			}
 
-			return TripResult.ok("ok", token);
+			return TripResult.ok("ok", tokenMap);
 		}
 		return TripResult.build(405, (String) map.get("errmsg"));
 	}
@@ -170,7 +170,9 @@ public class LoginServiceImpl implements LoginService {
 						newUserInfo.setId(useres.get(0).getId());
 						userMapper.updateByPrimaryKeySelective(newUserInfo);
 					}
-					return TripResult.ok("ok",JWTUtil.generateToken(newUserInfo.getId()));
+					Map<String, String> tokenMap = new HashMap<String, String>(1);
+					tokenMap.put("token", JWTUtil.generateToken(newUserInfo.getId()));
+					return TripResult.ok("ok", tokenMap);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

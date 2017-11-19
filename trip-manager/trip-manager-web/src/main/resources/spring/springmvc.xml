@@ -15,12 +15,12 @@
     <mvc:annotation-driven/>
     
     <!-- 配置登录拦截器 -->
-     <!--<mvc:interceptors>-->
-    	<!--<mvc:interceptor>-->
-    		<!--<mvc:mapping path="/**"/>-->
-    		<!--<bean class="com.cppteam.app.interceptor.LoginInterceptor" />-->
-    	<!--</mvc:interceptor>-->
-    <!--</mvc:interceptors>-->
+     <mvc:interceptors>
+    	<mvc:interceptor>
+    		<mvc:mapping path="/manager/**"/>
+    		<bean class="com.cppteam.interceptor.LoginInterceptor" />
+    	</mvc:interceptor>
+    </mvc:interceptors>
 	<!-- 配置静态资源 -->
 	<mvc:resources location="/layui/" mapping="/manager/layui/**" />
 	<mvc:resources location="/" mapping="/*.html" />
