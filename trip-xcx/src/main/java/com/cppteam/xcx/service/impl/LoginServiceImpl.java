@@ -102,8 +102,8 @@ public class LoginServiceImpl implements LoginService {
 	@Override
 	public TripResult getToken1(String encryptedData, String iv, String code) {
 		//登录凭证不能为空
-		if (StringUtils.isBlank(encryptedData)||StringUtils.isBlank(iv)||StringUtils.isBlank(code)) {
-			return TripResult.build(400,"缺少参数");
+		if (StringUtils.isBlank(encryptedData) || StringUtils.isBlank(iv) || StringUtils.isBlank(code)) {
+			return TripResult.build(400, "缺少参数");
 		}
 		// code 换取session_key
 		Map<String, String> params = new HashMap<String, String>();
@@ -116,70 +116,75 @@ public class LoginServiceImpl implements LoginService {
 		Gson gson = new Gson();
 		Map<String, Object> map = new HashMap<String, Object>();
 		map = gson.fromJson(resJson, map.getClass());
-		// 成功获取openID, 返回token
-		if (map.containsKey("openid")) {
+
+		if (!map.containsKey("openid")) {
+			//获取失败,返回微信给的错误码和提示信息
+			return TripResult.build((Integer) map.get("errcode"), (String) map.get("errmsg"));
+		}
+		//返回正确
 			//获取会话密钥（session_key）
-			String session_key= (String) map.get("session_key");
+			String session_key = (String) map.get("session_key");
 			//用户的唯一标识（openid）
-			String openid= (String) map.get("openid");
+			String openid = (String) map.get("openid");
+			//////////////// 对encryptedData加密数据进行AES解密 ////////////////
+			String result = null;
 			try {
-				String result = AesCbcUtil.decrypt(encryptedData, session_key, iv, "UTF-8");
-				if (!StringUtils.isBlank(result)) {
-
-					Map<String ,String> userInfoJSON= new HashMap<>();
-					userInfoJSON=gson.fromJson(result,userInfoJSON.getClass());
-					//////////////// 2、更新数据库user表 ////////////////
-					User newUserInfo=new User();
-					newUserInfo.setOpenid(userInfoJSON.get("openId"));
-					newUserInfo.setNickname(userInfoJSON.get("nickName"));
-					newUserInfo.setSex(userInfoJSON.get("gender"));
-					newUserInfo.setProvince(userInfoJSON.get("province"));
-					newUserInfo.setCity(userInfoJSON.get("city"));
-					newUserInfo.setCountry(userInfoJSON.get("country"));
-					newUserInfo.setUnionid(userInfoJSON.get("unionId"));
-					//获取新头像
-					String url = userInfoJSON.get("avatarUrl");
-					String avatar = ImageUtils.saveImage(url);
-					String avatarThumb = ImageUtils.saveImage(ImageUtils.thumbnailImage(url, AVATAR_THUMB_DEFAULT_WIDTH), null);
-					newUserInfo.setAvatar(avatar);
-					newUserInfo.setAvaterThumb(avatarThumb);
-
-					//通过openId,unionId判断是否存在user,符合其中之一即可
-					UserExample userExample = new UserExample();
-					userExample.or().andOpenidEqualTo(openid);
-					userExample.or().andUnionidEqualTo(newUserInfo.getUnionid());
-
-					List<User> useres = userMapper.selectByExample(userExample);
-					if(useres.isEmpty()){
-						//新用户,注册信息到数据库
-						newUserInfo.setId(IDGenerator.createUserId());
-						userMapper.insertSelective(newUserInfo);
-					}else{
-						//老用户,更新信息到数据库
-						// 删除旧头像
-						User oldUserInfo = useres.get(0);
-						String oldAvatar = oldUserInfo.getAvatar();
-						String oldAvatarThumb = oldUserInfo.getAvaterThumb();
-						if (!DEFAULT_NULL.equals(oldAvatar)) {
-							ImageUtils.deleteImage(oldAvatar);
-						}
-						if (!DEFAULT_NULL.equals(oldAvatarThumb)) {
-							ImageUtils.deleteImage(oldAvatarThumb);
-						}
-
-						newUserInfo.setId(useres.get(0).getId());
-						userMapper.updateByPrimaryKeySelective(newUserInfo);
-					}
-					Map<String, String> tokenMap = new HashMap<String, String>(1);
-					tokenMap.put("token", JWTUtil.generateToken(newUserInfo.getId()));
-					return TripResult.ok("ok", tokenMap);
-				}
+				result = AesCbcUtil.decrypt(encryptedData, session_key, iv, "UTF-8");
 			} catch (Exception e) {
 				e.printStackTrace();
+				return TripResult.build(400, "解密失败");
 			}
-			return TripResult.build(400,"解密失败");
-		}
-		return TripResult.build(405, (String) map.get("errmsg"));
-	}
+			if (StringUtils.isBlank(result)) {
+				return TripResult.build(400, "解密为null");
+			}
+			//解密成功,获得信息
+			Map<String, String> userInfoJSON = new HashMap<>();
+			userInfoJSON = gson.fromJson(result, userInfoJSON.getClass());
 
+			User newUserInfo = new User();
+			newUserInfo.setOpenid(userInfoJSON.get("openId"));
+			newUserInfo.setNickname(userInfoJSON.get("nickName"));
+			newUserInfo.setSex(userInfoJSON.get("gender"));
+			newUserInfo.setProvince(userInfoJSON.get("province"));
+			newUserInfo.setCity(userInfoJSON.get("city"));
+			newUserInfo.setCountry(userInfoJSON.get("country"));
+			newUserInfo.setUnionid(userInfoJSON.get("unionId"));
+			//获取新头像
+			String url = userInfoJSON.get("avatarUrl");
+			String avatar = ImageUtils.saveImage(url);
+			String avatarThumb = ImageUtils.saveImage(ImageUtils.thumbnailImage(url, AVATAR_THUMB_DEFAULT_WIDTH), null);
+			newUserInfo.setAvatar(avatar);
+			newUserInfo.setAvaterThumb(avatarThumb);
+
+			//通过openId,unionId判断是否存在user,符合其中之一即可
+			UserExample userExample = new UserExample();
+			userExample.or().andOpenidEqualTo(openid);
+			userExample.or().andUnionidEqualTo(newUserInfo.getUnionid());
+
+			List<User> useres = userMapper.selectByExample(userExample);
+			if (useres.isEmpty()) {
+				//新用户,注册信息到数据库
+				newUserInfo.setId(IDGenerator.createUserId());
+				userMapper.insertSelective(newUserInfo);
+			} else {
+				//老用户,更新信息到数据库
+				// 删除旧头像
+				User oldUserInfo = useres.get(0);
+				String oldAvatar = oldUserInfo.getAvatar();
+				String oldAvatarThumb = oldUserInfo.getAvaterThumb();
+				if (!DEFAULT_NULL.equals(oldAvatar)) {
+					ImageUtils.deleteImage(oldAvatar);
+				}
+				if (!DEFAULT_NULL.equals(oldAvatarThumb)) {
+					ImageUtils.deleteImage(oldAvatarThumb);
+				}
+
+				newUserInfo.setId(useres.get(0).getId());
+				userMapper.updateByPrimaryKeySelective(newUserInfo);
+			}
+			Map<String, String> tokenMap = new HashMap<String, String>(1);
+			tokenMap.put("token", JWTUtil.generateToken(newUserInfo.getId()));
+			return TripResult.ok("ok", tokenMap);
+
+	}
 }
