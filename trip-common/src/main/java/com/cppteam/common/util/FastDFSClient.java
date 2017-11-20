@@ -25,18 +25,29 @@ public class FastDFSClient {
 
 	public FastDFSClient(String conf) throws Exception {
 
+		String path = "";
 		if (conf.contains("classpath:")) {
+			// this.getClass().getResource("/");获取的是URL文本路径 调用 .getPath()获取类的绝对路径（/C://...）
 			String url = this.getClass().getResource("/").getPath();
-			url = url.substring(1);
+
+			// 在linux服务器上使用绝对路径，不需要去掉前面的"/"
+			// url = url.substring(1);
 			conf = conf.replace("classpath:", url);
+			path = conf;
 		}
-		ClientGlobal.init(conf);
+		path = path.substring(path.lastIndexOf(".") + 1, path.length());
+		if (path.equalsIgnoreCase("conf")) {
+			ClientGlobal.init(conf);
+		} else {
+			ClientGlobal.initByProperties(conf);
+		}
+
 		trackerClient = new TrackerClient();
 		trackerServer = trackerClient.getConnection();
 		storageServer = null;
 		storageClient = new StorageClient1(trackerServer, storageServer);
 	}
-	
+
 	// 上传文件
 	public String uploadFile(String fileName, String extName, NameValuePair[] metas) throws Exception {
 		return storageClient.upload_file1(fileName, extName, metas);

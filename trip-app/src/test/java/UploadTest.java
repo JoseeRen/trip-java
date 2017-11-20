@@ -26,7 +26,7 @@ public class UploadTest {
         CloseableHttpResponse response = null;
         try {
             httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost("http://localhost:8081/app/image/upload");
+            HttpPost httpPost = new HttpPost("http://192.168.229.133/app/image/upload");
 
             FileBody bin = new FileBody(file);
             HttpEntity reqEntinty = MultipartEntityBuilder.create()

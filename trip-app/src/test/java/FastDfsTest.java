@@ -50,7 +50,7 @@ public class FastDfsTest {
     @Test
     public void uploadImg() {
         try {
-            FastDFSClient fastDFSClient = new FastDFSClient("classpath:properties/fastdfs-client.conf");
+            FastDFSClient fastDFSClient = new FastDFSClient("classpath:properties/fastdfs-client.properties");
             File f = new File("C:\\Users\\Kim\\Pictures\\22-160R5140330159.jpg");
             ByteArrayOutputStream bos = new ByteArrayOutputStream((int) f.length());
             BufferedInputStream in = null;
