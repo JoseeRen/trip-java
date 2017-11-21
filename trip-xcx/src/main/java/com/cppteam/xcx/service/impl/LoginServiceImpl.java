@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cppteam.common.util.*;
+import com.cppteam.dao.JedisClient;
 import com.cppteam.mapper.UserMapper;
 import com.cppteam.pojo.User;
 import com.cppteam.pojo.UserExample;
@@ -37,11 +38,21 @@ public class LoginServiceImpl implements LoginService {
 	private String DEFAULT_NULL;
 	@Value("${AVATAR_THUMB_DEFAULT_WIDTH}")
 	private Integer AVATAR_THUMB_DEFAULT_WIDTH;
+
+	@Value("${SESSION_KEY}")
+	private String SESSION_KEY;
+
 	@Autowired
 	private UserMapper userMapper;
-	/**
-	 * 根据code获取用户登录token
-	 */
+	@Autowired
+	private JedisClient jedisClient;
+
+
+    /**
+     * 通过code获取用户登录凭证token
+     * @param code      小程序发起登录请求获得的code
+     * @return
+     */
 	@Override
 	public TripResult getToken(String code) {
 		// code 换取session_key
@@ -65,7 +76,9 @@ public class LoginServiceImpl implements LoginService {
 			criteria.andOpenidEqualTo(openid);
 			List<User> users = userMapper.selectByExample(userExample);
 
+
 			Map<String, String> tokenMap = new HashMap<String, String>();
+			String token = "";
 			// 新使用用户
 			if (users.isEmpty()) {
 				String userId = IDGenerator.createUserId();
@@ -76,10 +89,21 @@ public class LoginServiceImpl implements LoginService {
 				user.setAvatar("default");
 				user.setAvaterThumb("default");
 				userMapper.insertSelective(user);
-				tokenMap.put("token", JWTUtil.generateToken(userId));
+				token = JWTUtil.generateToken(userId);
 			} else {
-				tokenMap.put("token", JWTUtil.generateToken(users.get(0).getId()));
+				token = JWTUtil.generateToken(users.get(0).getId());
 			}
+            tokenMap.put("token", token);
+
+
+			// 获取会话密钥（session_key）存入redis中供后续使用
+			String sessionKey = (String) map.get("session_key");
+
+			// 如果redis中已经有该用户的旧会话密钥，删除之
+            if (StringUtils.isNotBlank(jedisClient.hget(SESSION_KEY, token))) {
+                jedisClient.hdel(SESSION_KEY, token);
+            }
+            jedisClient.hset(SESSION_KEY, token, sessionKey);
 
 			return TripResult.ok("ok", tokenMap);
 		}
