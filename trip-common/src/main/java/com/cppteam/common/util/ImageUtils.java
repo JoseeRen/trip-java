@@ -17,7 +17,9 @@ import java.util.Arrays;
 
 /**
  * 图片处理工具，提供图片的验证、缩略上传、删除等功能
- * Created by happykuan on 2017/10/28.
+ *
+ * @author happykuan
+ * @date 2017/10/28
  */
 public class ImageUtils {
 
@@ -34,7 +36,6 @@ public class ImageUtils {
         InputStream in = null;
         try {
             response = httpClient.execute(httpGet);
-            System.out.println(response.getStatusLine().getStatusCode());
             if (response.getStatusLine().getStatusCode() == 200) {
                 // 图片转换为字节数组
                 in = response.getEntity().getContent();
@@ -51,11 +52,15 @@ public class ImageUtils {
                 // 上传到图片服务器
                 FastDFSClient fastDFSClient = new FastDFSClient("classpath:properties/fastdfs-client.conf");
                 String extName = ImageUtils.getImgExtName(url);
+                String fileId = "";
                 if (StringUtils.isBlank(extName)) {
-                    return fastDFSClient.uploadFile(image);
+                    fileId = fastDFSClient.uploadFile(image);
                 } else {
-                    return fastDFSClient.uploadFile(image, extName);
+                    fileId = fastDFSClient.uploadFile(image, extName);
                 }
+                // 文件上传后，及时将fastdfs客户端置空，让GC回收内存
+                fastDFSClient = null;
+                return fileId;
             }
             return null;
         } catch (Exception e) {
@@ -65,9 +70,11 @@ public class ImageUtils {
             try {
                 if (baos != null) {
                     baos.close();
+                    baos = null;
                 }
                 if (in != null) {
                     in.close();
+                    in = null;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -85,12 +92,14 @@ public class ImageUtils {
         try {
             FastDFSClient fastDFSClient = new FastDFSClient("classpath:properties/fastdfs-client.conf");
             String extName = ImageUtils.getImgExtName(filename);
-
+            String fileId = "";
             if (StringUtils.isBlank(extName)) {
-                return fastDFSClient.uploadFile(bytes);
+                fileId = fastDFSClient.uploadFile(bytes);
             } else {
-                return fastDFSClient.uploadFile(bytes, extName);
+                fileId = fastDFSClient.uploadFile(bytes, extName);
             }
+            fastDFSClient = null;
+            return fileId;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -106,7 +115,9 @@ public class ImageUtils {
     public static int deleteImage(String fileId) {
         try {
             FastDFSClient fastDFSClient = new FastDFSClient("classpath:properties/fastdfs-client.conf");
-            return fastDFSClient.deleteFile(fileId);
+            int i = fastDFSClient.deleteFile(fileId);
+            fastDFSClient = null;
+            return i;
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
@@ -149,6 +160,7 @@ public class ImageUtils {
             // 缩略图输出为byte[]
             baos = new ByteArrayOutputStream();
             ImageIO.write(imageThumb, formatName, baos);
+            baos.flush();
             return baos.toByteArray();
 
         } catch (Exception e) {
@@ -159,9 +171,11 @@ public class ImageUtils {
             try {
                 if (baos != null) {
                     baos.close();
+                    baos = null;
                 }
                 if (is != null) {
                     is.close();
+                    is = null;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -207,10 +221,13 @@ public class ImageUtils {
         } finally {
             try {
                 if (baos != null) {
+                    baos.flush();
                     baos.close();
+                    baos = null;
                 }
                 if (in != null) {
                     in.close();
+                    in = null;
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -40,20 +40,17 @@ public class ImageServiceImpl implements ImageService {
             return TripResult.build(400, "图片格式不合法");
         }
         // 缩略图宽度，默认宽度为200px
-        targetWidth = targetWidth == null || targetWidth.intValue() == 0 ? UPLOAD_THUMB_DEFAULT_WIDTH : targetWidth;
+        targetWidth = targetWidth == null || targetWidth == 0 ? UPLOAD_THUMB_DEFAULT_WIDTH : targetWidth;
         String originImg = null;
         String thumbImg = null;
         try {
-
+            // 获取图片字节数组
+            byte[] imageBytes = image.getBytes();
             // 上传原图
-            originImg = ImageUtils.saveImage(image.getBytes(), originalFilename);
-
+            originImg = ImageUtils.saveImage(imageBytes, originalFilename);
             // 上传缩略图
-            if (targetWidth != null) {
-                String formatName = ImageUtils.getImgExtName(originalFilename);
-                thumbImg = ImageUtils.saveImage(ImageUtils.thumbnailImage(image.getBytes(), formatName, targetWidth),
-                        originalFilename);
-            }
+            String formatName = ImageUtils.getImgExtName(originalFilename);
+            thumbImg = ImageUtils.saveImage( ImageUtils.thumbnailImage(imageBytes, formatName, targetWidth), originalFilename );
 
         } catch (IOException e) {
             e.printStackTrace();

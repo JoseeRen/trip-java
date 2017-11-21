@@ -21,12 +21,12 @@ public class UploadTest {
     @Test
     public void upload() {
 
-        File file = new File("D:\\图片\\Stones.jpg");
+        File file = new File("D:\\图片\\Stones.png");
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse response = null;
         try {
             httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost("http://192.168.229.133/app/image/upload");
+            HttpPost httpPost = new HttpPost("https://journey.xiaokuango.com/app/image/upload");
 
             FileBody bin = new FileBody(file);
             HttpEntity reqEntinty = MultipartEntityBuilder.create()
