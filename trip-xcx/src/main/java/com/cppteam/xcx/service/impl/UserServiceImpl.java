@@ -27,8 +27,6 @@ public class UserServiceImpl implements UserService {
 
     @Value("${SESSION_KEY}")
     private String SESSION_KEY;
-    @Resource
-    private JedisClient jedisClient;
     @Value("${AVATAR_THUMB_DEFAULT_WIDTH}")
     private Integer AVATAR_THUMB_DEFAULT_WIDTH;
     @Value("${DEFAULT_NULL}")
