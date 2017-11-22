@@ -59,19 +59,19 @@ public class UserServiceImpl implements UserService {
         }
         //解密成功,获得信息
         Gson gson = new Gson();
-        Map<String, String> userInfoJSON = new HashMap<>();
+        Map<String, Object> userInfoJSON = new HashMap<>();
         userInfoJSON = gson.fromJson(result, userInfoJSON.getClass());
 
         User newUserInfo = new User();
-        newUserInfo.setOpenid(userInfoJSON.get("openId"));
-        newUserInfo.setNickname(userInfoJSON.get("nickName"));
-        newUserInfo.setSex(userInfoJSON.get("gender"));
-        newUserInfo.setProvince(userInfoJSON.get("province"));
-        newUserInfo.setCity(userInfoJSON.get("city"));
-        newUserInfo.setCountry(userInfoJSON.get("country"));
-        newUserInfo.setUnionid((userInfoJSON.get("unionId")==null)?"default":userInfoJSON.get("unionId"));
+        newUserInfo.setOpenid((String) userInfoJSON.get("openId"));
+        newUserInfo.setNickname((String) userInfoJSON.get("nickName"));
+        newUserInfo.setSex((Double)userInfoJSON.get("gender") == 0 ? "0" : "1");
+        newUserInfo.setProvince((String) userInfoJSON.get("province"));
+        newUserInfo.setCity((String) userInfoJSON.get("city"));
+        newUserInfo.setCountry((String) userInfoJSON.get("country"));
+        newUserInfo.setUnionid((userInfoJSON.get("unionId")==null) ? "default" : (String) userInfoJSON.get("unionId"));
         //获取新头像
-        String url = userInfoJSON.get("avatarUrl");
+        String url = (String) userInfoJSON.get("avatarUrl");
         String avatar = ImageUtils.saveImage(url);
         String avatarThumb = ImageUtils.saveImage(ImageUtils.thumbnailImage(url, AVATAR_THUMB_DEFAULT_WIDTH), null);
         newUserInfo.setAvatar(avatar);
