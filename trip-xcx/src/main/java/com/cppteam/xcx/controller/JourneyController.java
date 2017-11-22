@@ -65,8 +65,13 @@ public class JourneyController {
      * @return
      */
     @RequestMapping("/find")
-    public TripResult findJourney(@RequestHeader(value = "Authorization") String token,@RequestParam("collegeId") Integer collegeId,@RequestParam("type") Integer type,@RequestParam("dayNum") Integer dayNum){
-        return journeyService.findJourney(collegeId,type,dayNum);
+    public TripResult findJourney(@RequestHeader(value = "Authorization") String token,
+                                  @RequestParam("collegeId") Integer collegeId,
+                                  @RequestParam("type") Integer type,
+                                  @RequestParam("dayNum") Integer dayNum,
+                                  Integer page,
+                                  Integer count){
+        return journeyService.findJourney(collegeId, type, dayNum, page, count);
     }
 
     /**

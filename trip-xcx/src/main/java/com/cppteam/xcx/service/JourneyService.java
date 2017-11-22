@@ -34,7 +34,7 @@ public interface JourneyService {
      * @param dayNum    行程天数
      * @return
      */
-    public TripResult findJourney(Integer collegeId, Integer type, Integer dayNum);
+    public TripResult findJourney(Integer collegeId, Integer type, Integer dayNum, Integer page, Integer count);
 
     /**
      * 列出用户加入的行程

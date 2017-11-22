@@ -196,10 +196,12 @@ public class JourneyServiceImpl implements JourneyService {
      * @return          符合条件的游记列表
      */
     @Override
-    public TripResult findJourney(Integer collegeId, Integer type, Integer dayNum) {
-        if (collegeId==null||type == null || dayNum == null) {
-            return TripResult.build(400, "请求参数有误");
-        }
+    public TripResult findJourney(Integer collegeId, Integer type, Integer dayNum, Integer page, Integer count) {
+
+        // 默认分页参数
+        page = page == null || page <= 0 ? 1 : page;
+        count = count == null || count <= 0 ? 10 : count;
+
         JourneyExample journeyExample = new JourneyExample();
         JourneyExample.Criteria criteria = journeyExample.createCriteria();
         List<Integer> args = new ArrayList<Integer>();
