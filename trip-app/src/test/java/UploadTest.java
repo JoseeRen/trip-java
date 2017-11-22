@@ -40,10 +40,10 @@ public class UploadTest {
                     .addPart("image", bin)
                     .build();
             httpPost.setConfig(requestConfig);
-            httpPost.setEntity(reqEntinty);
+//            httpPost.setEntity(reqEntinty);
 
             // 发起请求 并返回请求的响应
-            response = httpClient.execute(httpPost);
+//            response = httpClient.execute(httpPost);
             System.out.println(response.getStatusLine().getStatusCode());
 
             HttpEntity entity = response.getEntity();

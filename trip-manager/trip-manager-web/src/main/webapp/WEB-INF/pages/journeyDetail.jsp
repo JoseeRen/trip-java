@@ -73,8 +73,8 @@
                 html += '<h1>游记标题：'+ trip.name +'</h1>'
                 html += '<h2>游记天数：'+ trip.dayNum +'</h2>'
                 // 游记是否有图片
-                if (trip.img !== 'default') {
-                    html += '<img src="${serverUrl}'+ trip.img +'">'
+                if (trip.imgThumb !== undefined && trip.imgThumb != '' && trip.imgThumb !== 'default') {
+                    html += '<img src="${serverUrl}'+ trip.imgThumb +'">'
                 }
                 $('#tripBox').html(html);
 
@@ -103,8 +103,8 @@
                                 result += '<p>'
 
                                 // 是否有图片
-                                if (site.img !== 'default') {
-                                    result += '<img src="${serverUrl}'+ site.img +'" />'
+                                if (site.imgThumb !== undefined && site.imgThumb !== 'default' && site.imgThumb !== '') {
+                                    result += '<img src="${serverUrl}'+ site.imgThumb +'" />'
                                 }
 
                                 // 区分事件与地点

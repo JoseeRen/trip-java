@@ -44,7 +44,7 @@
                 <th lay-data="{field:'type', width:80, templet: '#typeTpl'}">类型</th>
                 <th lay-data="{field:'dayNum', width:90, sort: true}">天数</th>
                 <th lay-data="{field:'img', width:100, templet: '#imgTpl'}">封面</th>
-                <th lay-data="{field:'imgThumb', width:100, templet: '#imgTpl'}">封面缩略</th>
+                <th lay-data="{field:'imgThumb', width:100, templet: '#imgThumbTpl'}">封面缩略</th>
                 <th lay-data="{field:'createTime', width:180, sort: true, templet: '#timeTpl'}">创建时间</th>
                 <th lay-data="{field:'collegeCid', width:120, sort: true}">出发学校</th>
                 <th lay-data="{field:'status', width:120, sort: true, templet: '#statusTpl'}">审核状态</th>
@@ -86,14 +86,6 @@
                         layer.close(index)
 
                     });
-                } else if(layEvent === 'edit'){ //编辑
-                    //do something
-
-                    //同步更新缓存对应的值
-                    obj.update({
-                        username: '123'
-                        ,title: 'xxx'
-                    });
                 }
             });
         });
@@ -117,10 +109,18 @@
     </script>
 
     <script type="text/html" id="imgTpl">
-        {{#  if (d.img == 'default') { }}
+        {{#  if (d.img == undefined || d.img == 'default' || d.img == '') { }}
         无封面图片
         {{# } else { }}
         <a target="_blank" href="${serverUrl}{{d.img}}" class="layui-table-link">查看图片</a>
+        {{# } }}
+    </script>
+
+    <script type="text/html" id="imgThumbTpl">
+        {{#  if (d.imgThumb == undefined || d.imgThumb == 'default' || d.imgThumb == '') { }}
+        无封面图片
+        {{# } else { }}
+        <a target="_blank" href="${serverUrl}{{d.imgThumb}}" class="layui-table-link">查看图片</a>
         {{# } }}
     </script>
 

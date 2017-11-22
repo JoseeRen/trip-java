@@ -10,6 +10,9 @@
 <!doctype html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>大学生旅行 - 后台管理</title>
     <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <style type="text/css">
@@ -23,8 +26,7 @@
     <div class="row">
         <div class="col-md-4 col-md-offset-4">
             <h1>管理员登录</h1>
-            <c:url var="loginAction" value="/api/manager/login" />
-            <form method="post" action="${loginAction}">
+            <form method="post" action="#">
                 <div class="form-group">
                     <label for="username">用户名：</label>
                     <input class="form-control" type="text" name="username" placeholder="用户名" id="username" />

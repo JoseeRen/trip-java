@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ import java.util.Map;
  * @date: 2017/11/21
  * @Description: TODO
  */
-
+@Service
 public class UserServiceImpl implements UserService {
 
     @Value("${SESSION_KEY}")
