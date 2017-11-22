@@ -148,13 +148,13 @@ public class ImageUtils {
 
             // 缩放的比例
             double scale = originalWidth / width;
-            int height = (int) (originalHeigth / scale);
+            Long height = Math.round(originalHeigth / scale);
 
             // 创建新的缩略图片
-            imageThumb = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
+            imageThumb = new BufferedImage(width, height.intValue(), BufferedImage.TYPE_INT_BGR);
             Graphics g = imageThumb.getGraphics();
             // 画出图片
-            g.drawImage(originalImage, 0, 0, width, height, Color.LIGHT_GRAY, null);
+            g.drawImage(originalImage, 0, 0, width, height.intValue(), Color.LIGHT_GRAY, null);
             g.dispose();
 
             // 缩略图输出为byte[]
