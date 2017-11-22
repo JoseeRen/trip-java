@@ -52,6 +52,8 @@ public class JourneyServiceImpl implements JourneyService {
     private String USER_TRIP_LIST_KEY;
     @Value("${ADDED_JOURNEY_CONTENT_KEY}")
     private String ADDED_JOURNEY_CONTENT_KEY;
+    @Value("${FOUND_JOURNEY_LIST_KEY}")
+    private String FOUND_JOURNEY_LIST_KEY;
 
     /**
      * 发起一个行程。该行为将会使用户从journey表中拉取一篇游记创建一个属于用户的行程，成功后将会将创建信息存入sponsor表中<br>
@@ -202,6 +204,21 @@ public class JourneyServiceImpl implements JourneyService {
         page = page == null || page <= 0 ? 1 : page;
         count = count == null || count <= 0 ? 10 : count;
 
+        // 从缓存中获取缓存内容的key
+        String cacheKey = collegeId + "_" + type + "_" + dayNum + "-" + page + "_" + count;
+
+
+        // 先尝试在缓存中读取
+        try {
+            String hget = jedisClient.hget(FOUND_JOURNEY_LIST_KEY, cacheKey);
+            if (StringUtils.isNotBlank(hget)) {
+                Object result = SerializeUtil.unSerialize(hget);
+                return TripResult.ok("获取成功", result);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // 设置查询条件
         JourneyExample journeyExample = new JourneyExample();
         JourneyExample.Criteria criteria = journeyExample.createCriteria();
@@ -231,6 +248,13 @@ public class JourneyServiceImpl implements JourneyService {
         result.put("page", page);
         result.put("total", total);
         result.put("list", journeys);
+
+        // 查询结果加入缓存中
+        try {
+            jedisClient.hset(FOUND_JOURNEY_LIST_KEY, cacheKey, SerializeUtil.serialize(result));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return TripResult.ok("获取成功", result);
     }

@@ -46,6 +46,8 @@ public class JourneyServiceImpl implements JourneyService {
 
     @Value("${APP_JOURNEY_LIST_KEY}")
     private String APP_JOURNEY_LIST_KEY;
+    @Value("${XCX_FOUND_JOURNEY_LIST_KEY}")
+    private String XCX_FOUND_JOURNEY_LIST_KEY;
 
     @Override
     public TripResult listTrips(String token, Integer page, Integer count) {
@@ -137,6 +139,7 @@ public class JourneyServiceImpl implements JourneyService {
 
         Integer status = journey.getStatus();
 
+
         // 执行删除
         switch (status) {
             case 0:
@@ -151,12 +154,18 @@ public class JourneyServiceImpl implements JourneyService {
         try {
             journeyMapper.updateByPrimaryKey(journey);
 
-            // 清除redis缓存
-            Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + userId);
-            Iterator<String> iterator = hkeys.iterator();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                jedisClient.hdel(APP_JOURNEY_LIST_KEY + userId, key);
+            try {
+                // 清除redis缓存
+                // app用户的游记列表缓存
+                Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + userId);
+                for (String key: hkeys) {
+                    jedisClient.hdel(APP_JOURNEY_LIST_KEY + userId, key);
+                }
+
+                // 更新小程序查询游记列表缓存
+                updateXcxJourneyListCache(journey);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
             return TripResult.ok();
@@ -166,6 +175,13 @@ public class JourneyServiceImpl implements JourneyService {
         }
     }
 
+
+    /**
+     * 添加一篇游记
+     * @param token
+     * @param journeyForm
+     * @return
+     */
     @Override
     public TripResult addTrip(String token, JourneyForm journeyForm) {
         String creatorId = JWTUtil.validToken(token);
@@ -227,17 +243,50 @@ public class JourneyServiceImpl implements JourneyService {
                 sitesMapper.batchInsert(siteList);
             }
 
-            // 清除redis缓存
-            Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + creatorId);
-            Iterator<String> iterator = hkeys.iterator();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                jedisClient.hdel(APP_JOURNEY_LIST_KEY + creatorId, key);
+            //　缓存操作，不应影响业务逻辑
+            try {
+                // 清除redis缓存
+                // app用户的游记列表缓存
+                Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + creatorId);
+                Iterator<String> iterator = hkeys.iterator();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    jedisClient.hdel(APP_JOURNEY_LIST_KEY + creatorId, key);
+                }
+
+                // 小程序查找游记列表的缓存
+                updateXcxJourneyListCache(journey);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+
             return TripResult.ok();
         } catch (Exception e) {
             e.printStackTrace();
             return TripResult.build(500, e.getMessage());
+        }
+    }
+
+
+    /**
+     * 更新小程序查询游记列表缓存
+     * @param journey collegeId, dayNum, type
+     */
+    private void updateXcxJourneyListCache(Journey journey) {
+        Set<String> hkeys;// 更新小程序查找游记列表的缓存
+        Integer collegeCid = journey.getCollegeCid();
+        Integer dayNum = journey.getDayNum();
+        String type = journey.getType();
+        String keyPrefix = collegeCid + "_" + type + "_" + dayNum;
+        hkeys = jedisClient.hkeys(XCX_FOUND_JOURNEY_LIST_KEY);
+        // key的定义：collegeId + "_" + type + "_" + dayNum + "-" + page + "_" + count
+        for (String key: hkeys) {
+            // 如果key的collegeId、type、dayNum与该篇删除的游记相同，则刷新该key下的缓存
+            String k = key;
+            String prefix = k.substring(0, key.indexOf("-"));
+            if (keyPrefix.equals(prefix)) {
+                jedisClient.hdel(XCX_FOUND_JOURNEY_LIST_KEY, key);
+            }
         }
     }
 }

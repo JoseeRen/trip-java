@@ -1,6 +1,7 @@
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -28,11 +29,17 @@ public class UploadTest {
             httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost("https://journey.xiaokuango.com/app/image/upload");
 
+            RequestConfig requestConfig = RequestConfig.custom()
+                    .setConnectTimeout(1800000)
+                    .setConnectionRequestTimeout(1800000)
+                    .setSocketTimeout(1800000).build();
+
             FileBody bin = new FileBody(file);
             HttpEntity reqEntinty = MultipartEntityBuilder.create()
                     // 相当于<input type="file" name="image"/>
                     .addPart("image", bin)
                     .build();
+            httpPost.setConfig(requestConfig);
             httpPost.setEntity(reqEntinty);
 
             // 发起请求 并返回请求的响应

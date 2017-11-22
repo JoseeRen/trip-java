@@ -1,6 +1,7 @@
 package com.cppteam.service.impl;
 
 import com.cppteam.common.util.TripResult;
+import com.cppteam.dao.JedisClient;
 import com.cppteam.mapper.DayMapper;
 import com.cppteam.mapper.JourneyMapper;
 import com.cppteam.mapper.SiteMapper;
@@ -12,10 +13,12 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by happykuan on 2017/11/7.
@@ -29,6 +32,11 @@ public class JourneyServiceImpl implements JourneyService {
     private DayMapper dayMapper;
     @Autowired
     private SiteMapper siteMapper;
+    @Autowired
+    private JedisClient jedisClient;
+
+    @Value("${XCX_FOUND_JOURNEY_LIST_KEY}")
+    private String XCX_FOUND_JOURNEY_LIST_KEY;
 
     /**
      * 分页获取游记列表
@@ -93,6 +101,14 @@ public class JourneyServiceImpl implements JourneyService {
         }
         try{
             journeyMapper.updateByPrimaryKey(journey);
+
+            // 更新小程序查找游记列表缓存
+            try {
+                updateXcxJourneyListCache(journey);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,6 +170,28 @@ public class JourneyServiceImpl implements JourneyService {
         }
 
         return TripResult.ok("", trip);
+    }
+
+    /**
+     * 更新小程序查询游记列表缓存
+     * @param journey collegeId, dayNum, type
+     */
+    private void updateXcxJourneyListCache(Journey journey) {
+        Set<String> hkeys;// 更新小程序查找游记列表的缓存
+        Integer collegeCid = journey.getCollegeCid();
+        Integer dayNum = journey.getDayNum();
+        String type = journey.getType();
+        String keyPrefix = collegeCid + "_" + type + "_" + dayNum;
+        hkeys = jedisClient.hkeys(XCX_FOUND_JOURNEY_LIST_KEY);
+        // key的定义：collegeId + "_" + type + "_" + dayNum + "-" + page + "_" + count
+        for (String key: hkeys) {
+            // 如果key的collegeId、type、dayNum与该篇删除的游记相同，则刷新该key下的缓存
+            String k = key;
+            String prefix = k.substring(0, key.indexOf("-"));
+            if (keyPrefix.equals(prefix)) {
+                jedisClient.hdel(XCX_FOUND_JOURNEY_LIST_KEY, key);
+            }
+        }
     }
 
 }
