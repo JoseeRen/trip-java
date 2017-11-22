@@ -1,3 +1,4 @@
+import com.cppteam.common.util.ImageUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -65,6 +66,44 @@ public class UploadTest {
             e.printStackTrace();
         }
 
+    }
+
+    @Test
+    public void thumb() {
+        File file = new File("D:\\intellij_idea_pro\\voyage_page\\images\\rBK5IloRfMqAJ5iQAA9V6RSnQug607.png");
+        FileInputStream fis = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            fis = new FileInputStream(file);
+            baos = new ByteArrayOutputStream();
+            int len = 0;
+            byte[] bytes = new byte[1024];
+
+            while ((len = fis.read(bytes)) != -1) {
+                baos.write(bytes, 0, len);
+            }
+            baos.flush();
+
+            byte[] byteArray = baos.toByteArray();
+
+            byte[] b = ImageUtils.thumbnailImage(byteArray, "png", 600);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (baos != null) {
+                    baos.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception e) {
+
+            }
+        }
     }
 
 }

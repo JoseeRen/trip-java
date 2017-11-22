@@ -146,9 +146,10 @@ public class ImageUtils {
             // 原始高度
             int originalHeigth = originalImage.getHeight();
 
-            // 缩放的比例
-            double scale = originalWidth / width;
-            Long height = Math.round(originalHeigth / scale);
+            // 缩放的比例, ！important 运算精度要到double，否则一些图片无法成功按比例缩放
+            double scale = (double) originalWidth / (double) width;
+
+            Long height = Math.round((double) originalHeigth / scale);
 
             // 创建新的缩略图片
             imageThumb = new BufferedImage(width, height.intValue(), BufferedImage.TYPE_INT_BGR);
