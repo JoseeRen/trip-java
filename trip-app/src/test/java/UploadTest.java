@@ -22,7 +22,7 @@ public class UploadTest {
     @Test
     public void upload() {
 
-        File file = new File("D:\\图片\\Stones.png");
+        File file = new File("D:\\intellij_idea_pro\\voyage_page\\images\\rBK5IloRfMqAJ5iQAA9V6RSnQug607.png");
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse response = null;
         try {
@@ -40,10 +40,10 @@ public class UploadTest {
                     .addPart("image", bin)
                     .build();
             httpPost.setConfig(requestConfig);
-//            httpPost.setEntity(reqEntinty);
+            httpPost.setEntity(reqEntinty);
 
             // 发起请求 并返回请求的响应
-//            response = httpClient.execute(httpPost);
+            response = httpClient.execute(httpPost);
             System.out.println(response.getStatusLine().getStatusCode());
 
             HttpEntity entity = response.getEntity();
