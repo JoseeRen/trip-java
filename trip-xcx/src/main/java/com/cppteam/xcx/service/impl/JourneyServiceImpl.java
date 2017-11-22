@@ -202,6 +202,7 @@ public class JourneyServiceImpl implements JourneyService {
         page = page == null || page <= 0 ? 1 : page;
         count = count == null || count <= 0 ? 10 : count;
 
+        // 设置查询条件
         JourneyExample journeyExample = new JourneyExample();
         JourneyExample.Criteria criteria = journeyExample.createCriteria();
         List<Integer> args = new ArrayList<Integer>();
@@ -213,11 +214,25 @@ public class JourneyServiceImpl implements JourneyService {
         criteria.andDayNumEqualTo(dayNum);
         criteria.andTypeEqualTo(type + "");
         criteria.andCollegeCidEqualTo(collegeId);
-        List<Journey> journeys = journeyMapper.selectByExample(journeyExample);
+
+        // 设置分页
+        PageHelper.startPage(page, count);
+        Page<Journey> pageInfo = (Page<Journey>) journeyMapper.selectByExample(journeyExample);
+
+        // 取分页结果
+        List<Journey> journeys = pageInfo.getResult();
         if (journeys.isEmpty()) {
             return TripResult.build(404, "查询为空");
         }
-        return TripResult.ok("获取成功", journeys);
+        long total = pageInfo.getTotal();
+
+        // 封装结果并返回
+        Map<String, Object> result = new HashMap<String, Object>(3);
+        result.put("page", page);
+        result.put("total", total);
+        result.put("list", journeys);
+
+        return TripResult.ok("获取成功", result);
     }
 
     /**
