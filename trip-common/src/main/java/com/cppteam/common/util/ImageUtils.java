@@ -152,7 +152,7 @@ public class ImageUtils {
             Long height = Math.round((double) originalHeigth / scale);
 
             // 创建新的缩略图片
-            imageThumb = new BufferedImage(width, height.intValue(), BufferedImage.TYPE_INT_BGR);
+            imageThumb = new BufferedImage(width, height.intValue(), BufferedImage.TYPE_USHORT_555_RGB);
             Graphics g = imageThumb.getGraphics();
             // 画出图片
             g.drawImage(originalImage, 0, 0, width, height.intValue(), Color.LIGHT_GRAY, null);

@@ -243,23 +243,6 @@ public class JourneyServiceImpl implements JourneyService {
                 sitesMapper.batchInsert(siteList);
             }
 
-            //　缓存操作，不应影响业务逻辑
-            try {
-                // 清除redis缓存
-                // app用户的游记列表缓存
-                Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + creatorId);
-                Iterator<String> iterator = hkeys.iterator();
-                while (iterator.hasNext()) {
-                    String key = iterator.next();
-                    jedisClient.hdel(APP_JOURNEY_LIST_KEY + creatorId, key);
-                }
-
-                // 小程序查找游记列表的缓存
-                updateXcxJourneyListCache(journey);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
             return TripResult.ok();
         } catch (Exception e) {
             e.printStackTrace();

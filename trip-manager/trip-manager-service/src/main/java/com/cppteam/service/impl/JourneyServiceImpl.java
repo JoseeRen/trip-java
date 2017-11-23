@@ -12,11 +12,14 @@ import com.cppteam.utils.TableResult;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +40,8 @@ public class JourneyServiceImpl implements JourneyService {
 
     @Value("${XCX_FOUND_JOURNEY_LIST_KEY}")
     private String XCX_FOUND_JOURNEY_LIST_KEY;
+
+    public static final Logger LOGGER = Logger.getLogger(JourneyServiceImpl.class);
 
     /**
      * 分页获取游记列表
@@ -177,17 +182,24 @@ public class JourneyServiceImpl implements JourneyService {
      * @param journey collegeId, dayNum, type
      */
     private void updateXcxJourneyListCache(Journey journey) {
-        Set<String> hkeys;// 更新小程序查找游记列表的缓存
         Integer collegeCid = journey.getCollegeCid();
         Integer dayNum = journey.getDayNum();
         String type = journey.getType();
         String keyPrefix = collegeCid + "_" + type + "_" + dayNum;
-        hkeys = jedisClient.hkeys(XCX_FOUND_JOURNEY_LIST_KEY);
+        Set<String> hkeys = jedisClient.hkeys(XCX_FOUND_JOURNEY_LIST_KEY);
+        Iterator<String> iterator = hkeys.iterator();
+
         // key的定义：collegeId + "_" + type + "_" + dayNum + "-" + page + "_" + count
-        for (String key: hkeys) {
+        while(iterator.hasNext()) {
+            String key = iterator.next();
             // 如果key的collegeId、type、dayNum与该篇删除的游记相同，则刷新该key下的缓存
             String k = key;
-            String prefix = k.substring(0, key.indexOf("-"));
+
+            String prefix = k.substring(0, k.indexOf("-"));
+            LOGGER.info("key="+key);
+            LOGGER.info("k="+k);
+            LOGGER.info("keyPrefix=" + keyPrefix);
+            LOGGER.info("prefix="+prefix);
             if (keyPrefix.equals(prefix)) {
                 jedisClient.hdel(XCX_FOUND_JOURNEY_LIST_KEY, key);
             }

@@ -54,6 +54,13 @@ public class JourneyServiceImpl implements JourneyService {
     private String ADDED_JOURNEY_CONTENT_KEY;
     @Value("${FOUND_JOURNEY_LIST_KEY}")
     private String FOUND_JOURNEY_LIST_KEY;
+    @Value("${REDIS_EXPIRE_TIME}")
+    private Integer REDIS_EXPIRE_TIME;
+
+    /**
+     * 类线程锁
+     */
+    private static final Class CLASS_LOCK = JourneyServiceImpl.class;
 
     /**
      * 发起一个行程。该行为将会使用户从journey表中拉取一篇游记创建一个属于用户的行程，成功后将会将创建信息存入sponsor表中<br>
@@ -89,7 +96,6 @@ public class JourneyServiceImpl implements JourneyService {
             // 更新用户信息
             updateUserInfo(user, userId);
 
-            userMapper.updateByPrimaryKeySelective(user);
             // 插入创建者信息
             sponsorMapper.insertSelective(sponsor);
 
@@ -108,7 +114,7 @@ public class JourneyServiceImpl implements JourneyService {
                 e.printStackTrace();
             }
 
-            return TripResult.ok("创建行程成功", tripId);
+            return TripResult.ok("创建行程成功", result);
         } catch (Exception e) {
             e.printStackTrace();
             return TripResult.build(500, e.getMessage());
@@ -201,8 +207,8 @@ public class JourneyServiceImpl implements JourneyService {
     public TripResult findJourney(Integer collegeId, Integer type, Integer dayNum, Integer page, Integer count) {
 
         // 默认分页参数
-        page = page == null || page <= 0 ? 1 : page;
-        count = count == null || count <= 0 ? 10 : count;
+        page = (page == null || page <= 0) ? 1 : page;
+        count = (count == null || count <= 0) ? 10 : count;
 
         // 从缓存中获取缓存内容的key
         String cacheKey = collegeId + "_" + type + "_" + dayNum + "-" + page + "_" + count;
@@ -251,7 +257,13 @@ public class JourneyServiceImpl implements JourneyService {
 
         // 查询结果加入缓存中
         try {
-            jedisClient.hset(FOUND_JOURNEY_LIST_KEY, cacheKey, SerializeUtil.serialize(result));
+            synchronized (CLASS_LOCK) {
+                String hget = jedisClient.hget(FOUND_JOURNEY_LIST_KEY, cacheKey);
+                if (StringUtils.isBlank(hget)) {
+                    jedisClient.hset(FOUND_JOURNEY_LIST_KEY, cacheKey, SerializeUtil.serialize(result));
+
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -319,7 +331,20 @@ public class JourneyServiceImpl implements JourneyService {
         result.put("list", journeys);
         // 将数据放入缓存中
         try {
-            jedisClient.hset(USER_TRIP_LIST_KEY + userId, page + "_" + count, SerializeUtil.serialize(result));
+            String hkey = USER_TRIP_LIST_KEY + userId;
+            String key = page + "_" + count;
+
+            // 加入类线程锁避免并发导致多次创建redis key
+            String hget = jedisClient.hget(hkey, key);
+            if (StringUtils.isBlank(hget)) {
+                synchronized (CLASS_LOCK) {
+                    hget = jedisClient.hget(hkey, key);
+                    if (StringUtils.isBlank(hget)) {
+                        jedisClient.hset(hkey, key, SerializeUtil.serialize(result));
+                    }
+                }
+            }
+
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -403,6 +428,7 @@ public class JourneyServiceImpl implements JourneyService {
         }
 
         // 更新数据
+        user.setId(userId);
         user.setAvatar(avatar);
         user.setAvaterThumb(avatarThumb);
         user.setNickname(nickname);
