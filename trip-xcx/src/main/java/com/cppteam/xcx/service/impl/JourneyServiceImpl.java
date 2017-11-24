@@ -56,6 +56,8 @@ public class JourneyServiceImpl implements JourneyService {
     private String FOUND_JOURNEY_LIST_KEY;
     @Value("${REDIS_EXPIRE_TIME}")
     private Integer REDIS_EXPIRE_TIME;
+    @Value("${APP_USER_INFO_KEY}")
+    private String APP_USER_INFO_KEY;
 
     /**
      * 类线程锁
@@ -433,5 +435,14 @@ public class JourneyServiceImpl implements JourneyService {
         user.setAvaterThumb(avatarThumb);
         user.setNickname(nickname);
         userMapper.updateByPrimaryKeySelective(user);
+
+        // 同步用户信息缓存
+        // 同步app端用户信息缓存
+        try {
+            jedisClient.hdel(APP_USER_INFO_KEY, userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }

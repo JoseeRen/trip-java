@@ -32,6 +32,8 @@ public class UserServiceImpl implements UserService {
     private Integer AVATAR_THUMB_DEFAULT_WIDTH;
     @Value("${DEFAULT_NULL}")
     private String DEFAULT_NULL;
+    @Value("${APP_USER_INFO_KEY}")
+    private String APP_USER_INFO_KEY;
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -101,6 +103,15 @@ public class UserServiceImpl implements UserService {
             newUserInfo.setId(useres.get(0).getId());
             userMapper.updateByPrimaryKeySelective(newUserInfo);
         }
+
+        // 同步用户信息缓存
+        // 同步app端用户信息缓存
+        try {
+            jedisClient.hdel(APP_USER_INFO_KEY, JWTUtil.validToken(token));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return TripResult.ok();
     }
 }
