@@ -1,7 +1,5 @@
 package com.cppteam.common.util;
 
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -163,8 +161,6 @@ public class ImageUtils {
 
             // 缩略图输出为byte[]
             baos = new ByteArrayOutputStream();
-            JPEGImageEncoder jpegImageEncoder = JPEGCodec.createJPEGEncoder(baos);
-            jpegImageEncoder.encode(imageThumb);
             ImageIO.write(imageThumb, formatName, baos);
             baos.flush();
             return baos.toByteArray();
