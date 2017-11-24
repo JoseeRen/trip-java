@@ -1,5 +1,7 @@
 package com.cppteam.common.util;
 
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -125,15 +127,16 @@ public class ImageUtils {
     }
 
     /**
-     * 根据宽度按比例缩放图片
+     * 根据宽度按比例缩放图片, 生成压缩的jpg格式图
      * @param imageBytes    源图片byte数组
-     * @param formatName    图片的格式
      * @param width         生成目标图片的宽度
      * @return              生成图片的byte数组
      */
-    public static byte[] thumbnailImage(byte[] imageBytes, String formatName, int width) {
+    public static byte[] thumbnailImage(byte[] imageBytes, int width) {
 
-        formatName = StringUtils.isBlank(formatName) ? "jpg" : formatName;
+
+        // formatName = StringUtils.isBlank(formatName) ? "jpg" : formatName;
+        String formatName = "jpg";
         InputStream is = null;
         BufferedImage originalImage;
         BufferedImage imageThumb;
@@ -160,6 +163,8 @@ public class ImageUtils {
 
             // 缩略图输出为byte[]
             baos = new ByteArrayOutputStream();
+            JPEGImageEncoder jpegImageEncoder = JPEGCodec.createJPEGEncoder(baos);
+            jpegImageEncoder.encode(imageThumb);
             ImageIO.write(imageThumb, formatName, baos);
             baos.flush();
             return baos.toByteArray();
@@ -213,7 +218,7 @@ public class ImageUtils {
                 byte[] image = baos.toByteArray();
 
                 // 创建缩略图
-                return ImageUtils.thumbnailImage(image, null, width);
+                return ImageUtils.thumbnailImage(image, width);
             }
             return null;
         } catch (Exception e) {

@@ -50,7 +50,8 @@ public class ImageServiceImpl implements ImageService {
             originImg = ImageUtils.saveImage(imageBytes, originalFilename);
             // 上传缩略图
             String formatName = ImageUtils.getImgExtName(originalFilename);
-            thumbImg = ImageUtils.saveImage( ImageUtils.thumbnailImage(imageBytes, formatName, targetWidth), originalFilename );
+            // 生成缩略图一律为jpg格式，因此在原文件名基础上加上".jpg"后缀使得图片上传工具截取jpg格式后缀
+            thumbImg = ImageUtils.saveImage( ImageUtils.thumbnailImage(imageBytes, targetWidth), originalFilename + ".jpg" );
 
         } catch (IOException e) {
             e.printStackTrace();

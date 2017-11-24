@@ -23,7 +23,7 @@ public class UploadTest {
     @Test
     public void upload() {
 
-        File file = new File("D:\\intellij_idea_pro\\voyage_page\\images\\rBK5IloRfMqAJ5iQAA9V6RSnQug607.png");
+        File file = new File("D:\\图片\\Stones.png");
         CloseableHttpClient httpClient = null;
         CloseableHttpResponse response = null;
         try {
@@ -70,7 +70,7 @@ public class UploadTest {
 
     @Test
     public void thumb() {
-        File file = new File("D:\\intellij_idea_pro\\voyage_page\\images\\rBK5IloRfMqAJ5iQAA9V6RSnQug607.png");
+        File file = new File("D:\\图片\\Stones.png");
         FileInputStream fis = null;
         ByteArrayOutputStream baos = null;
         try {
@@ -86,7 +86,12 @@ public class UploadTest {
 
             byte[] byteArray = baos.toByteArray();
 
-            byte[] b = ImageUtils.thumbnailImage(byteArray, "png", 600);
+            byte[] b = ImageUtils.thumbnailImage(byteArray, 600);
+
+            File f = new File("d:/img.jpg");
+            FileOutputStream fileOutputStream = new FileOutputStream(f);
+            fileOutputStream.write(b);
+            fileOutputStream.flush();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
