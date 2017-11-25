@@ -77,8 +77,10 @@ public class LoginServiceImpl implements LoginService {
 			List<User> users = userMapper.selectByExample(userExample);
 
 
-			Map<String, String> tokenMap = new HashMap<String, String>();
+			Map<String, Object> resultMap = new HashMap<String, Object>(2);
 			String token = "";
+			// 是否需要前端传递用户信息进行解密
+			boolean needFillInfo = false;
 			// 新使用用户
 			if (users.isEmpty()) {
 				String userId = IDGenerator.createUserId();
@@ -90,10 +92,12 @@ public class LoginServiceImpl implements LoginService {
 				user.setAvaterThumb("default");
 				userMapper.insertSelective(user);
 				token = JWTUtil.generateToken(userId);
+				needFillInfo = true;
 			} else {
 				token = JWTUtil.generateToken(users.get(0).getId());
 			}
-            tokenMap.put("token", token);
+			resultMap.put("token", token);
+			resultMap.put("need_fill", needFillInfo);
 
 
 			// 获取会话密钥（session_key）存入redis中供后续使用
@@ -105,7 +109,7 @@ public class LoginServiceImpl implements LoginService {
             }
             jedisClient.hset(SESSION_KEY, token, sessionKey);
 
-			return TripResult.ok("ok", tokenMap);
+			return TripResult.ok("ok", resultMap);
 		}
 		return TripResult.build(405, (String) map.get("errmsg"));
 	}
