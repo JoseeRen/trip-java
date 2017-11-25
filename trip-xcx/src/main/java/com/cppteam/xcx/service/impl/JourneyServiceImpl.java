@@ -105,16 +105,16 @@ public class JourneyServiceImpl implements JourneyService {
             result.put("tripId", tripId);
 
             // 同步缓存
-            try {
-
-                // 更新用户加入的行程列表缓存
-                Set<String> hkeys = jedisClient.hkeys(USER_TRIP_LIST_KEY + userId);
-                for (String key: hkeys) {
-                    jedisClient.hdel(USER_TRIP_LIST_KEY + userId, key);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+//            try {
+//
+//                // 更新用户加入的行程列表缓存
+//                Set<String> hkeys = jedisClient.hkeys(USER_TRIP_LIST_KEY + userId);
+//                for (String key: hkeys) {
+//                    jedisClient.hdel(USER_TRIP_LIST_KEY + userId, key);
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 
             return TripResult.ok("创建行程成功", result);
         } catch (Exception e) {
@@ -151,8 +151,8 @@ public class JourneyServiceImpl implements JourneyService {
         // 是否已经跟随过
         FollowerExample followerExample = new FollowerExample();
         FollowerExample.Criteria followerExampleCriteria = followerExample.createCriteria();
-        followerExampleCriteria.andIdEqualTo(tripId);
-        followerExampleCriteria.andSponsorIdEqualTo(followerId);
+        followerExampleCriteria.andSponsorIdEqualTo(tripId);
+        followerExampleCriteria.andUserIdEqualTo(followerId);
         List<Follower> followers = followerMapper.selectByExample(followerExample);
         if (!followers.isEmpty()) {
             return TripResult.build(404, "已经跟随过该行程了");
@@ -175,14 +175,14 @@ public class JourneyServiceImpl implements JourneyService {
 
             // 同步缓存
             try {
-                // 该用户添加的行程列表
-                Set<String> hkeys = jedisClient.hkeys(USER_TRIP_LIST_KEY + followerId);
-                Iterator<String> iterator = hkeys.iterator();
-                while (iterator.hasNext()) {
-                    String key = iterator.next();
-                    jedisClient.hdel(USER_TRIP_LIST_KEY + followerId, key);
-                }
-
+//                // 该用户添加的行程列表
+//                Set<String> hkeys = jedisClient.hkeys(USER_TRIP_LIST_KEY + followerId);
+//                Iterator<String> iterator = hkeys.iterator();
+//                while (iterator.hasNext()) {
+//                    String key = iterator.next();
+//                    jedisClient.hdel(USER_TRIP_LIST_KEY + followerId, key);
+//                }
+//
                 // 该行程的详情（跟随的人被更新）
                 jedisClient.hdel(ADDED_JOURNEY_CONTENT_KEY, tripId);
             } catch (Exception e) {
@@ -287,14 +287,14 @@ public class JourneyServiceImpl implements JourneyService {
         }
 
         // 从缓存中读取
-        try {
-            String resultStr = jedisClient.hget(USER_TRIP_LIST_KEY + userId, page + "_" + count);
-            if (StringUtils.isNotBlank(resultStr)) {
-                return TripResult.ok("获取行程列表成功", SerializeUtil.unSerialize(resultStr));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            String resultStr = jedisClient.hget(USER_TRIP_LIST_KEY + userId, page + "_" + count);
+//            if (StringUtils.isNotBlank(resultStr)) {
+//                return TripResult.ok("获取行程列表成功", SerializeUtil.unSerialize(resultStr));
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
         PageHelper.startPage(page, count);
 
@@ -332,24 +332,24 @@ public class JourneyServiceImpl implements JourneyService {
         result.put("total", total);
         result.put("list", journeys);
         // 将数据放入缓存中
-        try {
-            String hkey = USER_TRIP_LIST_KEY + userId;
-            String key = page + "_" + count;
-
-            // 加入类线程锁避免并发导致多次创建redis key
-            String hget = jedisClient.hget(hkey, key);
-            if (StringUtils.isBlank(hget)) {
-                synchronized (CLASS_LOCK) {
-                    hget = jedisClient.hget(hkey, key);
-                    if (StringUtils.isBlank(hget)) {
-                        jedisClient.hset(hkey, key, SerializeUtil.serialize(result));
-                    }
-                }
-            }
-
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+//        try {
+//            String hkey = USER_TRIP_LIST_KEY + userId;
+//            String key = page + "_" + count;
+//
+//            // 加入类线程锁避免并发导致多次创建redis key
+//            String hget = jedisClient.hget(hkey, key);
+//            if (StringUtils.isBlank(hget)) {
+//                synchronized (CLASS_LOCK) {
+//                    hget = jedisClient.hget(hkey, key);
+//                    if (StringUtils.isBlank(hget)) {
+//                        jedisClient.hset(hkey, key, SerializeUtil.serialize(result));
+//                    }
+//                }
+//            }
+//
+//        } catch (Exception e){
+//            e.printStackTrace();
+//        }
 
 
         return TripResult.ok("获取行程列表成功", result);
