@@ -1,6 +1,7 @@
 package com.cppteam.xcx.pojo;
 
 import com.cppteam.pojo.Site;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * Created by happykuan on 2017/11/1.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Day implements Serializable{
     private static final long serialVersionUID = 5197924700518374077L;
     private String id;

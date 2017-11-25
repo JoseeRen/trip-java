@@ -25,6 +25,8 @@ public class SiteServiceImpl implements SiteService {
     private JedisClient jedisClient;
     @Value("${MINI_PRO_SITE_KEY}")
     private String MINI_PRO_SITE_KEY;
+    @Value("${DEFAULT_NULL}")
+    private String DEFAULT_NULL;
 
     @Autowired
     private SiteMapper siteMapper;
@@ -56,6 +58,17 @@ public class SiteServiceImpl implements SiteService {
             return TripResult.build(404, "not found");
         }
         Site site = sites.get(0);
+
+        // 格式化数据
+        site.setId(null);
+        site.setDayId(null);
+        if (StringUtils.isBlank(site.getImg())) {
+            site.setImg(DEFAULT_NULL);
+        }
+        if (StringUtils.isBlank(site.getImgThumb())) {
+            site.setImgThumb(null);
+        }
+
         // 存入redis缓存中
         try{
             jedisClient.hset(MINI_PRO_SITE_KEY, siteId, SerializeUtil.serialize(site));

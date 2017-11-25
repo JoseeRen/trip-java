@@ -10,6 +10,12 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
     <artifactId>trip-manager-pojo</artifactId>
-
+    <dependencies>
+        <dependency>
+            <groupId>com.cppteam</groupId>
+            <artifactId>trip-common</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
 
 </project>

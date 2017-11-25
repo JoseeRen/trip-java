@@ -1,5 +1,7 @@
 package com.cppteam.xcx.pojo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.List;
  * Created by happykuan on 2017/11/1.
  * @author happykuan
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class JoinedJourney implements Serializable{
     private static final long serialVersionUID = 7906219203401854837L;
     private String id;

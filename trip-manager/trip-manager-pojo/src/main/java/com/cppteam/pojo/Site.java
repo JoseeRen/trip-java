@@ -1,7 +1,10 @@
 package com.cppteam.pojo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Site implements Serializable {
     private static final long serialVersionUID = -1455568401933315036L;
     /**

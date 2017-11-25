@@ -7,10 +7,12 @@ import com.cppteam.mapper.JourneyMapper;
 import com.cppteam.mapper.SponsorMapper;
 import com.cppteam.mapper.UserMapper;
 import com.cppteam.pojo.*;
+import com.cppteam.pojo.Follower;
 import com.cppteam.xcx.mapper.DaysMapper;
 import com.cppteam.xcx.mapper.FollowersMapper;
 import com.cppteam.xcx.mapper.JourneysMapper;
-import com.cppteam.xcx.pojo.JoinedJourney;
+import com.cppteam.xcx.pojo.*;
+import com.cppteam.xcx.pojo.Day;
 import com.cppteam.xcx.service.JourneyService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -58,6 +60,8 @@ public class JourneyServiceImpl implements JourneyService {
     private Integer REDIS_EXPIRE_TIME;
     @Value("${APP_USER_INFO_KEY}")
     private String APP_USER_INFO_KEY;
+    @Value("${DEFAULT_NULL}")
+    private String DEFAULT_NULL;
 
     /**
      * 类线程锁
@@ -309,6 +313,28 @@ public class JourneyServiceImpl implements JourneyService {
             return TripResult.build(404, "该用户没有加入任何行程");
         }
 
+        // 格式化返回内容，清除冗余数据
+        for (JoinedJourney jdJourney: journeys) {
+            jdJourney.setJourneyId(null);
+            if (StringUtils.isBlank(jdJourney.getAvatar())) {
+                jdJourney.setAvatar(DEFAULT_NULL);
+            }
+            if (StringUtils.isBlank(jdJourney.getAvaterThumb())) {
+                jdJourney.setAvaterThumb(DEFAULT_NULL);
+            }
+
+            List<com.cppteam.xcx.pojo.Follower> followers = jdJourney.getFollowers();
+            for (com.cppteam.xcx.pojo.Follower follower: followers) {
+                follower.setId(null);
+                if (StringUtils.isBlank(follower.getAvatar())) {
+                    follower.setAvatar(DEFAULT_NULL);
+                }
+                if (StringUtils.isBlank(follower.getAvaterThumb())) {
+                    follower.setAvaterThumb(DEFAULT_NULL);
+                }
+            }
+        }
+
         /**
          * 排序在sql语句中实现 2017年11月12日
          */
@@ -382,6 +408,31 @@ public class JourneyServiceImpl implements JourneyService {
 
         // 通过行程id获取跟随用户list
         List<com.cppteam.xcx.pojo.Follower> followers = followersMapper.getFollowersByTripId(tripId);
+
+
+        // 格式化返回内容，清除冗余数据
+        for(com.cppteam.xcx.pojo.Follower follower: followers) {
+            follower.setId(null);
+            if (StringUtils.isBlank(follower.getAvatar())) {
+                follower.setAvatar(DEFAULT_NULL);
+            }
+            if (StringUtils.isBlank(follower.getAvaterThumb())) {
+                follower.setAvaterThumb(DEFAULT_NULL);
+            }
+        }
+
+        for (Day day: days) {
+            day.setId(null);
+            List<Site> sites = day.getSites();
+            for (Site site: sites) {
+                if (StringUtils.isBlank(site.getImg())) {
+                    site.setImg(DEFAULT_NULL);
+                }
+                if (StringUtils.isBlank(site.getImgThumb())) {
+                    site.setImgThumb(DEFAULT_NULL);
+                }
+            }
+        }
 
         // 封装结果集
         Map<String, Object> result = new HashMap<String, Object>();

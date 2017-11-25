@@ -17,11 +17,6 @@
             <artifactId>trip-manager-pojo</artifactId>
             <version>1.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.cppteam</groupId>
-            <artifactId>trip-common</artifactId>
-            <version>1.0</version>
-        </dependency>
         <!-- Mybatis -->
         <dependency>
             <groupId>org.mybatis</groupId>
