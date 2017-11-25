@@ -422,7 +422,6 @@ public class JourneyServiceImpl implements JourneyService {
         }
 
         for (Day day: days) {
-            day.setId(null);
             List<Site> sites = day.getSites();
             for (Site site: sites) {
                 if (StringUtils.isBlank(site.getImg())) {
@@ -458,25 +457,40 @@ public class JourneyServiceImpl implements JourneyService {
      */
     private void updateUserInfo(User user, String userId) {
 
+        if (user == null) {
+            return ;
+        }
+
         // 获取表单用户名信息
-        String nickname = user.getNickname();
+        String nickname = StringUtils.isBlank(user.getNickname()) ? null : user.getNickname();
+
         // 获取表单头像信息url, 并将头像保存在本地服务器。avatar是一张网络图片
         String originalAvatar = user.getAvatar();
-        // 上传头像
-        String avatar = ImageUtils.saveImage(originalAvatar);
-        // 上传缩略图头像
-        String avatarThumb = ImageUtils.saveImage(ImageUtils.thumbnailImage(originalAvatar, AVATAR_THUMB_DEFAULT_WIDTH), null);
 
+        if (StringUtils.isBlank(nickname) && StringUtils.isBlank(originalAvatar)) {
+            return ;
+        }
+
+        // 新上传头像fileId默认为null, 假如没有上传图片或上传图片失败，则不会更新数据库中的值
+        String avatar = null;
+        String avatarThumb = null;
+        if (StringUtils.isNotBlank(originalAvatar)) {
+            // 上传头像
+            avatar = ImageUtils.saveImage(originalAvatar);
+            // 上传缩略图头像
+            avatarThumb = ImageUtils.saveImage(ImageUtils.thumbnailImage(originalAvatar, AVATAR_THUMB_DEFAULT_WIDTH), null);
+
+        }
         // 从数据库中获取用户原有信息
         user = userMapper.selectByPrimaryKey(userId);
 
-        // 若原资料中有头像信息，将其删除
+        // 若原资料中有头像信息且上传头像不为空，将其数据库中保存的头像从服务器删除
         String oldAvatar = user.getAvatar();
         String oldAvatarThumb = user.getAvaterThumb();
-        if (!"default".equals(oldAvatar)) {
+        if (!"default".equals(oldAvatar) && StringUtils.isNotBlank(avatar)) {
             ImageUtils.deleteImage(oldAvatar);
         }
-        if (!"default".equals(oldAvatarThumb)) {
+        if (!"default".equals(oldAvatarThumb) && StringUtils.isNotBlank(avatarThumb)) {
             ImageUtils.deleteImage(oldAvatarThumb);
         }
 
@@ -485,6 +499,7 @@ public class JourneyServiceImpl implements JourneyService {
         user.setAvatar(avatar);
         user.setAvaterThumb(avatarThumb);
         user.setNickname(nickname);
+
         userMapper.updateByPrimaryKeySelective(user);
 
         // 同步用户信息缓存
