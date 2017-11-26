@@ -52,8 +52,11 @@ public class JourneyServiceImpl implements JourneyService {
     private Integer AVATAR_THUMB_DEFAULT_WIDTH;
     @Value("${USER_TRIP_LIST_KEY}")
     private String USER_TRIP_LIST_KEY;
-    @Value("${ADDED_JOURNEY_CONTENT_KEY}")
-    private String ADDED_JOURNEY_CONTENT_KEY;
+    @Value("${JOURNEY_CONTENT_BY_TRIPID}")
+    private String JOURNEY_CONTENT_BY_TRIPID;
+    @Value("${TRIP_FOLLOWERS}")
+    private String TRIP_FOLLOWERS;
+
     @Value("${FOUND_JOURNEY_LIST_KEY}")
     private String FOUND_JOURNEY_LIST_KEY;
     @Value("${REDIS_EXPIRE_TIME}")
@@ -107,18 +110,6 @@ public class JourneyServiceImpl implements JourneyService {
 
             Map<String, String> result = new HashMap<String, String>(1);
             result.put("tripId", tripId);
-
-            // 同步缓存
-//            try {
-//
-//                // 更新用户加入的行程列表缓存
-//                Set<String> hkeys = jedisClient.hkeys(USER_TRIP_LIST_KEY + userId);
-//                for (String key: hkeys) {
-//                    jedisClient.hdel(USER_TRIP_LIST_KEY + userId, key);
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
 
             return TripResult.ok("创建行程成功", result);
         } catch (Exception e) {
@@ -177,18 +168,9 @@ public class JourneyServiceImpl implements JourneyService {
             // 更新用户信息
             updateUserInfo(user, followerId);
 
-            // 同步缓存
+            // 更新行程对应跟随者缓存
             try {
-//                // 该用户添加的行程列表
-//                Set<String> hkeys = jedisClient.hkeys(USER_TRIP_LIST_KEY + followerId);
-//                Iterator<String> iterator = hkeys.iterator();
-//                while (iterator.hasNext()) {
-//                    String key = iterator.next();
-//                    jedisClient.hdel(USER_TRIP_LIST_KEY + followerId, key);
-//                }
-//
-                // 该行程的详情（跟随的人被更新）
-                jedisClient.hdel(ADDED_JOURNEY_CONTENT_KEY, tripId);
+                jedisClient.hdel(TRIP_FOLLOWERS, tripId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -283,26 +265,16 @@ public class JourneyServiceImpl implements JourneyService {
      * @return              用户添加的行程包括同行者列表
      */
     @Override
-    public TripResult listJourney(String token, Integer page, Integer count) {
+    public TripResult listTrip(String token, Integer page, Integer count) {
 
         String userId = JWTUtil.validToken(token);
         if (StringUtils.isBlank(userId)) {
             return TripResult.build(400, "请求参数有误");
         }
 
-        // 从缓存中读取
-//        try {
-//            String resultStr = jedisClient.hget(USER_TRIP_LIST_KEY + userId, page + "_" + count);
-//            if (StringUtils.isNotBlank(resultStr)) {
-//                return TripResult.ok("获取行程列表成功", SerializeUtil.unSerialize(resultStr));
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-
         PageHelper.startPage(page, count);
 
-        // 数据库分页查询
+        // 数据库分页查询获取该用户的行程列表
         Page<JoinedJourney> pageInfo = (Page<JoinedJourney>) journeysMapper.getJourneysByUserId(userId);
 
         // 取分页结果
@@ -313,18 +285,85 @@ public class JourneyServiceImpl implements JourneyService {
             return TripResult.build(404, "该用户没有加入任何行程");
         }
 
-        // 格式化返回内容，清除冗余数据
-        for (JoinedJourney jdJourney: journeys) {
-            jdJourney.setJourneyId(null);
-            if (StringUtils.isBlank(jdJourney.getAvatar())) {
-                jdJourney.setAvatar(DEFAULT_NULL);
+        // 封装结果
+        Map<String, Object> result = new HashMap<String, Object>(3);
+        result.put("page", pageNum);
+        result.put("total", total);
+        result.put("list", journeys);
+
+        return TripResult.ok("获取行程列表成功", result);
+    }
+
+    /**
+     * 根据行程id获取行程详情
+     * @param token     用户唯一标识
+     * @param tripId    行程ID
+     * @return          tripId, days, followers
+     */
+    @Override
+    public TripResult showTrip(String token, String tripId) {
+
+        // 从缓存中通过行程id获取游记的详情
+        List<Day> days = null;
+        try {
+            String hget = jedisClient.hget(JOURNEY_CONTENT_BY_TRIPID, tripId);
+            if (StringUtils.isNotBlank(hget)) {
+                days = (List<Day>) SerializeUtil.unSerialize(hget);
             }
-            if (StringUtils.isBlank(jdJourney.getAvaterThumb())) {
-                jdJourney.setAvaterThumb(DEFAULT_NULL);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 若缓存中没有该行程对应的游记详情，则根据行程id在数据库中获取游记的详情
+        // 假如数据库中也没有该游记详情，则为缓存击穿现象，这将会在后续完善
+        if (days == null || days.isEmpty()) {
+            days = daysMapper.getDayByTripId(tripId);
+            if (days.isEmpty()) {
+                return TripResult.build(404, "游记不存在");
+            }
+            // 格式化行程详情返回内容
+            for (Day day: days) {
+                List<Site> sites = day.getSites();
+                for (Site site: sites) {
+                    if (StringUtils.isBlank(site.getImg())) {
+                        site.setImg(DEFAULT_NULL);
+                    }
+                    if (StringUtils.isBlank(site.getImgThumb())) {
+                        site.setImgThumb(DEFAULT_NULL);
+                    }
+                }
             }
 
-            List<com.cppteam.xcx.pojo.Follower> followers = jdJourney.getFollowers();
-            for (com.cppteam.xcx.pojo.Follower follower: followers) {
+            // 将游记详情存入缓存中
+            try {
+                synchronized (CLASS_LOCK) {
+                    Boolean hexists = jedisClient.hexists(JOURNEY_CONTENT_BY_TRIPID, tripId);
+                    if (!hexists) {
+                        jedisClient.hset(JOURNEY_CONTENT_BY_TRIPID, tripId, SerializeUtil.serialize(days));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 从缓存中通过tripId获取该行程的跟随者
+        List<com.cppteam.xcx.pojo.Follower> followers = null;
+        try {
+            String hget = jedisClient.hget(TRIP_FOLLOWERS, tripId);
+            if (StringUtils.isNotBlank(hget)) {
+                followers = (List<com.cppteam.xcx.pojo.Follower>) SerializeUtil.unSerialize(hget);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 通过行程id在数据库中获取跟随用户列表
+        if (followers == null || followers.isEmpty()) {
+            followers = followersMapper.getFollowersByTripId(tripId);
+
+            // 格式化跟随者返回内容，清除冗余数据
+            for(com.cppteam.xcx.pojo.Follower follower: followers) {
                 follower.setId(null);
                 if (StringUtils.isBlank(follower.getAvatar())) {
                     follower.setAvatar(DEFAULT_NULL);
@@ -333,118 +372,27 @@ public class JourneyServiceImpl implements JourneyService {
                     follower.setAvaterThumb(DEFAULT_NULL);
                 }
             }
-        }
 
-        /**
-         * 排序在sql语句中实现 2017年11月12日
-         */
-        /*
-        // 排序处理
-        Collections.sort(journeys, new Comparator<JoinedJourney>() {
-            @Override
-            public int compare(JoinedJourney o1, JoinedJourney o2) {
-                Date date1 = o1.getJoinTime();
-                Date date2 = o2.getJoinTime();
-                // 降序排序
-                return date2.compareTo(date1);
-            }
-        });
-        */
-
-
-        // 封装结果
-        Map<String, Object> result = new HashMap<String, Object>();
-        result.put("page", pageNum);
-        result.put("total", total);
-        result.put("list", journeys);
-        // 将数据放入缓存中
-//        try {
-//            String hkey = USER_TRIP_LIST_KEY + userId;
-//            String key = page + "_" + count;
-//
-//            // 加入类线程锁避免并发导致多次创建redis key
-//            String hget = jedisClient.hget(hkey, key);
-//            if (StringUtils.isBlank(hget)) {
-//                synchronized (CLASS_LOCK) {
-//                    hget = jedisClient.hget(hkey, key);
-//                    if (StringUtils.isBlank(hget)) {
-//                        jedisClient.hset(hkey, key, SerializeUtil.serialize(result));
-//                    }
-//                }
-//            }
-//
-//        } catch (Exception e){
-//            e.printStackTrace();
-//        }
-
-
-        return TripResult.ok("获取行程列表成功", result);
-    }
-
-    /**
-     * 根据行程id获取行程详情。
-     * @param token     用户唯一标识
-     * @param tripId    行程ID
-     * @return          tripId, days, followers
-     */
-    @Override
-    public TripResult showTrip(String token, String tripId) {
-
-        // 从缓存中读取
-        try {
-            String str = jedisClient.hget(ADDED_JOURNEY_CONTENT_KEY, tripId);
-            if (StringUtils.isNotBlank(str)) {
-                return TripResult.ok("获取游记详情成功", SerializeUtil.unSerialize(str));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        List<com.cppteam.xcx.pojo.Day> days = daysMapper.getDayByTripId(tripId);
-        if (days.isEmpty()) {
-            return TripResult.build(404, "游记不存在");
-        }
-
-
-        // 通过行程id获取跟随用户list
-        List<com.cppteam.xcx.pojo.Follower> followers = followersMapper.getFollowersByTripId(tripId);
-
-
-        // 格式化返回内容，清除冗余数据
-        for(com.cppteam.xcx.pojo.Follower follower: followers) {
-            follower.setId(null);
-            if (StringUtils.isBlank(follower.getAvatar())) {
-                follower.setAvatar(DEFAULT_NULL);
-            }
-            if (StringUtils.isBlank(follower.getAvaterThumb())) {
-                follower.setAvaterThumb(DEFAULT_NULL);
-            }
-        }
-
-        for (Day day: days) {
-            List<Site> sites = day.getSites();
-            for (Site site: sites) {
-                if (StringUtils.isBlank(site.getImg())) {
-                    site.setImg(DEFAULT_NULL);
+            // 将跟随者列表存入缓缓存中
+            try {
+                synchronized (CLASS_LOCK) {
+                    Boolean hexists = jedisClient.hexists(TRIP_FOLLOWERS, tripId);
+                    if (!hexists) {
+                        jedisClient.hset(TRIP_FOLLOWERS, tripId, SerializeUtil.serialize(followers));
+                    }
                 }
-                if (StringUtils.isBlank(site.getImgThumb())) {
-                    site.setImgThumb(DEFAULT_NULL);
-                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
+
 
         // 封装结果集
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("days", days);
         result.put("tripId", tripId);
         result.put("followers", followers);
-
-        // 结果集存入缓存中
-        try {
-            jedisClient.hset(ADDED_JOURNEY_CONTENT_KEY, tripId, SerializeUtil.serialize(result));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         return TripResult.ok("获取游记详情成功", result);
     }

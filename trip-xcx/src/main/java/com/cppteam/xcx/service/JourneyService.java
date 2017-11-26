@@ -41,7 +41,7 @@ public interface JourneyService {
      * @param token
      * @return
      */
-    public TripResult listJourney(String token, Integer page, Integer count);
+    public TripResult listTrip(String token, Integer page, Integer count);
 
 
     /**

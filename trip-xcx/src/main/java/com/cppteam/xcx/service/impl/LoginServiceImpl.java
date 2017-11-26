@@ -94,7 +94,11 @@ public class LoginServiceImpl implements LoginService {
 				token = JWTUtil.generateToken(userId);
 				needFillInfo = true;
 			} else {
-				token = JWTUtil.generateToken(users.get(0).getId());
+                User user = users.get(0);
+                token = JWTUtil.generateToken(user.getId());
+                if (StringUtils.isBlank(user.getAvatar()) || DEFAULT_NULL.equals(user.getAvatar())) {
+                    needFillInfo = true;
+                }
 			}
 			resultMap.put("token", token);
 			resultMap.put("need_fill", needFillInfo);

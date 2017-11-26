@@ -25,12 +25,12 @@ public class JourneyController {
      * @return
      */
     @RequestMapping(value = "/list")
-    public TripResult listJourney(@RequestHeader(value = "Authorization") String token, Integer page, Integer count) {
+    public TripResult listTrip(@RequestHeader(value = "Authorization") String token, Integer page, Integer count) {
 
         // 为page和count设置默认值
         page = (page == null || page <= 0) ? 1 : page;
         count = (count == null || count <= 0) ? 5 : count;
-        return journeyService.listJourney(token, page, count);
+        return journeyService.listTrip(token, page, count);
     }
 
     /**

@@ -66,7 +66,7 @@ public class SiteServiceImpl implements SiteService {
             site.setImg(DEFAULT_NULL);
         }
         if (StringUtils.isBlank(site.getImgThumb())) {
-            site.setImgThumb(null);
+            site.setImgThumb(DEFAULT_NULL);
         }
 
         // 存入redis缓存中

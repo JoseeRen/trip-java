@@ -4,6 +4,7 @@ import com.cppteam.dao.JedisClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import redis.clients.jedis.JedisCluster;
 
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -63,6 +64,17 @@ public class JedisClientCluster implements JedisClient {
 	@Override
 	public Set<String> hkeys(String hkey) {
 		return jedisCluster.hkeys(hkey);
+	}
+
+	@Override
+	public Boolean hexists(String hkey, String field) {
+		Boolean hexists = jedisCluster.hexists(hkey, field);
+		try {
+			jedisCluster.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return hexists;
 	}
 
 }

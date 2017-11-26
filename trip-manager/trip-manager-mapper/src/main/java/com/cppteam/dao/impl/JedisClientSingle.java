@@ -97,4 +97,12 @@ public class JedisClientSingle implements JedisClient {
 		return hkeys;
 	}
 
+	@Override
+	public Boolean hexists(String hkey, String field) {
+		Jedis jedis = jedisPool.getResource();
+		Boolean hexists = jedis.hexists(hkey, field);
+		jedis.close();
+		return hexists;
+	}
+
 }

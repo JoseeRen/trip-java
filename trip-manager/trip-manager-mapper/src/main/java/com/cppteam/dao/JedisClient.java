@@ -81,5 +81,13 @@ public interface JedisClient {
      */
     Set<String> hkeys(String hkey);
 
+    /**
+     * 查看hash表key中，给定域field是否存在
+     * @param hkey
+     * @param field
+     * @return
+     */
+    Boolean hexists(String hkey, String field);
+
 }
 

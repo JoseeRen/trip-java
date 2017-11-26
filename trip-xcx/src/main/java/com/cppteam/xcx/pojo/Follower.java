@@ -1,10 +1,13 @@
 package com.cppteam.xcx.pojo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
 
 /**
  * Created by happykuan on 2017/11/1.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Follower implements Serializable{
     private static final long serialVersionUID = 4770831164132096552L;
     private String id;

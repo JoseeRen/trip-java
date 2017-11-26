@@ -48,9 +48,12 @@ public class JourneyServiceImpl implements JourneyService {
     private String APP_JOURNEY_LIST_KEY;
     @Value("${XCX_FOUND_JOURNEY_LIST_KEY}")
     private String XCX_FOUND_JOURNEY_LIST_KEY;
+    @Value("${DEFAULT_NULL}")
+    private String DEFAULT_NULL;
 
     @Override
     public TripResult listTrips(String token, Integer page, Integer count) {
+
         String userId = JWTUtil.validToken(token);
         page = page == null || page <= 0 ? 1 : page;
         count = count == null || count <= 0 ? 10 : count;
@@ -186,9 +189,21 @@ public class JourneyServiceImpl implements JourneyService {
     public TripResult addTrip(String token, JourneyForm journeyForm) {
         String creatorId = JWTUtil.validToken(token);
 
+
         // 处理journeyForm
         String journeyId = IDGenerator.createId();
         journeyForm.setId(journeyId);
+
+        // 空配图转default
+        String img = journeyForm.getImg();
+        String imgThumb = journeyForm.getImgThumb();
+
+        img = StringUtils.isBlank(img) ? DEFAULT_NULL : img;
+        imgThumb = StringUtils.isBlank(imgThumb) ? DEFAULT_NULL : imgThumb;
+
+        journeyForm.setImg(img);
+        journeyForm.setImgThumb(imgThumb);
+
         Journey journey = new Journey();
         BeanUtils.copyProperties(journeyForm, journey, "days");
         journey.setCreatorId(creatorId);
@@ -216,6 +231,7 @@ public class JourneyServiceImpl implements JourneyService {
             String dayId = IDGenerator.createId();
             day.setId(dayId);
             day.setJourneyId(journeyId);
+
             // 加入到dayList中
             dayList.add(day);
 
@@ -231,6 +247,16 @@ public class JourneyServiceImpl implements JourneyService {
                 BeanUtils.copyProperties(siteForm, site);
                 site.setId(siteId);
                 site.setDayId(dayId);
+
+                // 空配图转default
+                String img1 = site.getImg();
+                String imgThumb1 = site.getImgThumb();
+
+                img1 = StringUtils.isBlank(img1) ? DEFAULT_NULL : img1;
+                imgThumb1 = StringUtils.isBlank(imgThumb1) ? DEFAULT_NULL : imgThumb1;
+
+                site.setImg(img1);
+                site.setImgThumb(imgThumb1);
                 // 加入到siteList中
                 siteList.add(site);
             }
