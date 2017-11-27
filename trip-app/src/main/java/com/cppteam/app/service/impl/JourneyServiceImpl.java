@@ -1,6 +1,7 @@
 package com.cppteam.app.service.impl;
 
 import com.cppteam.app.mapper.DaysMapper;
+import com.cppteam.app.mapper.JourneysMapper;
 import com.cppteam.app.mapper.SitesMapper;
 import com.cppteam.app.pojo.DayForm;
 import com.cppteam.app.pojo.JourneyForm;
@@ -12,10 +13,7 @@ import com.cppteam.common.util.SerializeUtil;
 import com.cppteam.common.util.TripResult;
 import com.cppteam.dao.JedisClient;
 import com.cppteam.mapper.JourneyMapper;
-import com.cppteam.pojo.Day;
-import com.cppteam.pojo.Journey;
-import com.cppteam.pojo.JourneyExample;
-import com.cppteam.pojo.Site;
+import com.cppteam.pojo.*;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -38,9 +36,13 @@ public class JourneyServiceImpl implements JourneyService {
     @Autowired
     private JourneyMapper journeyMapper;
     @Autowired
+    private JourneysMapper journeysMapper;
+    @Autowired
     private DaysMapper daysMapper;
+
     @Autowired
     private SitesMapper sitesMapper;
+
     @Autowired
     private JedisClient jedisClient;
 
@@ -274,6 +276,24 @@ public class JourneyServiceImpl implements JourneyService {
             e.printStackTrace();
             return TripResult.build(500, e.getMessage());
         }
+    }
+
+    /**
+     * 获取用户的游记详情
+     * @param token
+     * @param journeyId
+     * @return
+     */
+    @Override
+    public TripResult showJourney(String token, String journeyId) {
+        String userId = JWTUtil.validToken(token);
+        JourneyForm journeyForm = journeysMapper.select(userId, journeyId);
+
+        if (journeyForm == null) {
+            return TripResult.build(404, "not found");
+        }
+
+        return TripResult.ok("ok", journeyForm);
     }
 
 

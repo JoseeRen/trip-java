@@ -6,7 +6,6 @@
     <result column="nickname" jdbcType="VARCHAR" property="nickname" />
     <result column="avatar" jdbcType="VARCHAR" property="avatar" />
     <result column="avater_thumb" jdbcType="VARCHAR" property="avaterThumb" />
-    <result column="journeyId" jdbcType="CHAR" property="journeyId" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="day_num" jdbcType="INTEGER" property="dayNum" />
     <result column="img" jdbcType="VARCHAR" property="img" />
@@ -21,7 +20,6 @@
         `user`.nickname,
         `user`.avatar,
         `user`.avater_thumb,
-        journey.id AS journeyId,
         journey.`name`,
         journey.day_num,
         journey.img,
@@ -41,7 +39,6 @@
         `user`.nickname,
         `user`.avatar,
         `user`.avater_thumb,
-        journey.id AS journeyId,
         journey.`name`,
         journey.day_num,
         journey.img,

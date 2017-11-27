@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cppteam.app.mapper.JourneysMapper">
+  <resultMap id="BaseResultMap" type="com.cppteam.app.pojo.JourneyForm">
+    <id column="id" jdbcType="CHAR" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="day_num" jdbcType="INTEGER" property="dayNum" />
+    <result column="type" jdbcType="CHAR" property="type" />
+    <result column="img" jdbcType="VARCHAR" property="img" />
+    <result column="img_thumb" jdbcType="VARCHAR" property="imgThumb" />
+    <result column="college_cId" jdbcType="INTEGER" property="collegeCid" />
+    <collection property="days" column="id" select="com.cppteam.app.mapper.DaysMapper.select" />
+  </resultMap>
+  <select id="select" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select * from journey where id = #{journeyId} and creator_id = #{creatorId} ORDER BY create_time DESC
+  </select>
+</mapper>

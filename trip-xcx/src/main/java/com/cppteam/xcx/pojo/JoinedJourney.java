@@ -18,7 +18,6 @@ public class JoinedJourney implements Serializable{
     private String nickname;
     private String avatar;
     private String avaterThumb;
-    private String journeyId;
     private String name;
     private Integer dayNum;
     private String img;
@@ -56,14 +55,6 @@ public class JoinedJourney implements Serializable{
 
     public void setAvaterThumb(String avaterThumb) {
         this.avaterThumb = avaterThumb;
-    }
-
-    public String getJourneyId() {
-        return journeyId;
-    }
-
-    public void setJourneyId(String journeyId) {
-        this.journeyId = journeyId;
     }
 
     public String getName() {

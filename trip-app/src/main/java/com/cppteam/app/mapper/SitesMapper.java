@@ -1,6 +1,8 @@
 package com.cppteam.app.mapper;
 
+import com.cppteam.app.pojo.SiteForm;
 import com.cppteam.pojo.Site;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -16,4 +18,11 @@ public interface SitesMapper {
      * @return 受影响条数
      */
     int batchInsert(List<Site> sites);
+
+    /**
+     * dayId获取地点详情
+     * @param dayId
+     * @return
+     */
+    List<SiteForm> selectByDayId(@Param("dayId") String dayId);
 }

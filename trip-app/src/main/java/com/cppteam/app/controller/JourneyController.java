@@ -52,4 +52,16 @@ public class JourneyController {
     public TripResult removeTrip(@PathVariable String journeyId, @RequestHeader("Authorization") String token) {
         return journeyService.removeTrip(token, journeyId);
     }
+
+    /**
+     * 获取游记详情
+     * @param journeyId
+     * @param token
+     * @return
+     */
+    @RequestMapping(value = "/view/{journeyId}")
+    public TripResult showJourney(@PathVariable String journeyId, @RequestHeader("Authorization") String token) {
+        return journeyService.showJourney(token, journeyId);
+    }
+
 }

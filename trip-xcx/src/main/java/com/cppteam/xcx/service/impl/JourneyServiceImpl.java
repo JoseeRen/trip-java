@@ -235,6 +235,17 @@ public class JourneyServiceImpl implements JourneyService {
         if (journeys.isEmpty()) {
             return TripResult.build(404, "查询为空");
         }
+
+        // 删除冗余字段
+        for(Journey journey: journeys) {
+            journey.setStatus(null);
+            journey.setCreatorId(null);
+            journey.setCollegeCid(null);
+            journey.setType(null);
+            journey.setDayNum(null);
+            journey.setCreateTime(null);
+        }
+
         long total = pageInfo.getTotal();
 
         // 封装结果并返回
@@ -246,8 +257,8 @@ public class JourneyServiceImpl implements JourneyService {
         // 查询结果加入缓存中
         try {
             synchronized (CLASS_LOCK) {
-                String hget = jedisClient.hget(FOUND_JOURNEY_LIST_KEY, cacheKey);
-                if (StringUtils.isBlank(hget)) {
+                Boolean hexists = jedisClient.hexists(FOUND_JOURNEY_LIST_KEY, cacheKey);
+                if (!hexists) {
                     jedisClient.hset(FOUND_JOURNEY_LIST_KEY, cacheKey, SerializeUtil.serialize(result));
 
                 }

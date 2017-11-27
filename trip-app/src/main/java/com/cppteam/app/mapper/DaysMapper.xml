@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.cppteam.app.mapper.DaysMapper" >
+    <resultMap id="BaseResultMap" type="com.cppteam.app.pojo.DayForm">
+        <!--<id column="id" jdbcType="CHAR" property="id" />-->
+        <result column="count" jdbcType="INTEGER" property="count" />
+        <collection property="sites" column="id" select="com.cppteam.app.mapper.SitesMapper.selectByDayId" />
+    </resultMap>
   <insert id="batchInsert" parameterType="java.util.List" >
     INSERT INTO `day` (
 	`day`.id,
@@ -12,4 +17,7 @@
       (#{day.id}, #{day.count}, #{day.journeyId})
     </foreach>
   </insert>
+    <select id="select" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select * FROM day WHERE journey_id = #{journeyId} ORDER BY count ASC
+    </select>
 </mapper>

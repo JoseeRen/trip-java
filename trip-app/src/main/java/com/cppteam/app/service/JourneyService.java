@@ -36,4 +36,12 @@ public interface JourneyService {
      * @return
      */
     public TripResult addTrip(String token, JourneyForm journeyForm);
+
+    /**
+     * 获取用户添加的游记详情
+     * @param token
+     * @param journeyId
+     * @return
+     */
+    public TripResult showJourney(String token, String journeyId);
 }

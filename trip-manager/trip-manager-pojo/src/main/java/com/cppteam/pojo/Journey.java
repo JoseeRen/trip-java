@@ -1,8 +1,11 @@
 package com.cppteam.pojo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
 import java.util.Date;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Journey implements Serializable{
     private static final long serialVersionUID = 120250778956679805L;
     /**

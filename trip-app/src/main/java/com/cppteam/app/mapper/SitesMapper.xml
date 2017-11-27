@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.cppteam.app.mapper.SitesMapper" >
+    <resultMap id="BaseResultMap" type="com.cppteam.app.pojo.SiteForm">
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="time" property="time" jdbcType="REAL" />
+        <result column="img" property="img" jdbcType="VARCHAR" />
+        <result column="count" property="count" jdbcType="INTEGER" />
+        <result column="img_thumb" property="imgThumb" jdbcType="VARCHAR" />
+    </resultMap>
   <insert id="batchInsert" parameterType="java.util.List" >
       INSERT INTO site (
       `site`.`id`,
@@ -26,4 +33,8 @@
         )
       </foreach>
     </insert>
+
+    <select id="selectByDayId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT * FROM site WHERE day_id = #{dayId} ORDER BY count ASC
+    </select>
 </mapper>
