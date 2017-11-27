@@ -182,7 +182,7 @@ public class JourneyServiceImpl implements JourneyService {
 
 
     /**
-     * 添加一篇游记
+     * 添加或更新一篇游记，无journeyId->创建；有则更新
      * @param token
      * @param journeyForm
      * @return
@@ -191,9 +191,27 @@ public class JourneyServiceImpl implements JourneyService {
     public TripResult addTrip(String token, JourneyForm journeyForm) {
         String creatorId = JWTUtil.validToken(token);
 
+        String journeyId = journeyForm.getId();
 
+        // 被更新的游记的状态，默认为0未审核
+        Integer status = 0;
+
+        // 更新游记
+        if (StringUtils.isNotBlank(journeyId)) {
+            // 删除原来的游记
+            Journey journey = journeyMapper.selectByPrimaryKey(journeyId);
+            status = journey.getStatus();
+            if (journey != null && journey.getCreatorId().equals(creatorId)) {
+                journeyMapper.deleteByPrimaryKey(journeyId);
+            } else {
+                return TripResult.build(405, "update failed");
+            }
+        } else {
+            journeyId = IDGenerator.createId();
+        }
+
+        // 添加游记
         // 处理journeyForm
-        String journeyId = IDGenerator.createId();
         journeyForm.setId(journeyId);
 
         // 空配图转default
@@ -270,6 +288,12 @@ public class JourneyServiceImpl implements JourneyService {
             if (!siteList.isEmpty()) {
                 sitesMapper.batchInsert(siteList);
             }
+
+            // 更新status
+            Journey record = new Journey();
+            record.setId(journeyId);
+            record.setStatus(status);
+            journeyMapper.updateByPrimaryKeySelective(record);
 
             return TripResult.ok();
         } catch (Exception e) {
