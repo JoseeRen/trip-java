@@ -14,6 +14,7 @@ import com.cppteam.xcx.mapper.JourneysMapper;
 import com.cppteam.xcx.pojo.*;
 import com.cppteam.xcx.pojo.Day;
 import com.cppteam.xcx.service.JourneyService;
+import com.cppteam.xcx.service.UserService;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,9 @@ public class JourneyServiceImpl implements JourneyService {
     private DaysMapper daysMapper;
     @Autowired
     private JedisClient jedisClient;
+
+    @Autowired
+    private UserService userService;
 
 
     @Value("${AVATAR_THUMB_DEFAULT_WIDTH}")
@@ -465,6 +469,9 @@ public class JourneyServiceImpl implements JourneyService {
         // 同步app端用户信息缓存
         try {
             jedisClient.hdel(APP_USER_INFO_KEY, userId);
+
+            // 更新游记详情中的跟随者缓存
+            userService.refreshFollowersCache(userId);
         } catch (Exception e) {
             e.printStackTrace();
         }

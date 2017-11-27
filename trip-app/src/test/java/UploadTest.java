@@ -10,6 +10,7 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
+import java.awt.*;
 import java.io.*;
 
 import org.apache.http.util.EntityUtils;
@@ -92,6 +93,46 @@ public class UploadTest {
             FileOutputStream fileOutputStream = new FileOutputStream(f);
             fileOutputStream.write(b);
             fileOutputStream.flush();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (baos != null) {
+                    baos.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception e) {
+
+            }
+        }
+    }
+
+    @Test
+    public void update() {
+        File file = new File("D:\\图片\\Stones.png");
+        FileInputStream fis = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            fis = new FileInputStream(file);
+            baos = new ByteArrayOutputStream();
+            int len = 0;
+            byte[] bytes = new byte[1024];
+
+            while ((len = fis.read(bytes)) != -1) {
+                baos.write(bytes, 0, len);
+            }
+            baos.flush();
+
+            byte[] byteArray = baos.toByteArray();
+
+            byte[] b = ImageUtils.thumbnailImage(byteArray, 600);
+
+//            ImageUtils.modifyImage(b, "group1/M00/00/01/rBK5IloS7fGAZ3Y6AAkShXpbOjQ968.png");
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

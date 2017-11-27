@@ -72,6 +72,7 @@ public class FastDFSClient {
 	public String uploadFile(byte[] fileContent) throws Exception {
 		return storageClient.upload_file1(fileContent, null, null);
 	}
+
 	// 删除文件
 	public int deleteFile(String groupName, String remoteFileName) throws IOException, MyException {
 		return storageClient.delete_file(groupName, remoteFileName);
@@ -80,24 +81,4 @@ public class FastDFSClient {
 		return storageClient.delete_file1(fileId);
 	}
 
-	public int modify_file(String group_name, String appender_filename, long file_offset, String local_filename)
-			throws IOException, MyException {
-		return storageClient.modify_file(group_name, appender_filename, file_offset, local_filename);
-	}
-
-	public int modify_file(String group_name, String appender_filename, long file_offset, byte[] file_buff)
-			throws IOException, MyException {
-		return storageClient.modify_file(group_name, appender_filename, file_offset, file_buff);
-	}
-
-	public int modify_file(String group_name, String appender_filename, long file_offset, byte[] file_buff,
-			int buffer_offset, int buffer_length) throws IOException, MyException {
-		return storageClient.modify_file(group_name, appender_filename, file_offset, file_buff, buffer_offset,
-				buffer_length);
-	}
-
-	public int modify_file(String group_name, String appender_filename, long file_offset, long modify_size,
-			UploadCallback callback) throws IOException, MyException {
-		return storageClient.modify_file(group_name, appender_filename, file_offset, modify_size, callback);
-	}
 }

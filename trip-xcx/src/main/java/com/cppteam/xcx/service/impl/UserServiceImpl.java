@@ -2,9 +2,11 @@ package com.cppteam.xcx.service.impl;
 
 import com.cppteam.common.util.*;
 import com.cppteam.dao.JedisClient;
+import com.cppteam.mapper.FollowerMapper;
+import com.cppteam.mapper.SponsorMapper;
 import com.cppteam.mapper.UserMapper;
-import com.cppteam.pojo.User;
-import com.cppteam.pojo.UserExample;
+import com.cppteam.pojo.*;
+import com.cppteam.xcx.mapper.FollowersMapper;
 import com.cppteam.xcx.service.UserService;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
@@ -34,10 +36,17 @@ public class UserServiceImpl implements UserService {
     private String DEFAULT_NULL;
     @Value("${APP_USER_INFO_KEY}")
     private String APP_USER_INFO_KEY;
+    @Value("${TRIP_FOLLOWERS}")
+    private String TRIP_FOLLOWERS;
+
     @Autowired
     private UserMapper userMapper;
     @Autowired
     private JedisClient jedisClient;
+    @Autowired
+    private SponsorMapper sponsorMapper;
+    @Autowired
+    private FollowerMapper followerMapper;
 
     @Override
     public TripResult refreshInfo(String token, String encryptedData, String iv) {
@@ -104,14 +113,53 @@ public class UserServiceImpl implements UserService {
             userMapper.updateByPrimaryKeySelective(newUserInfo);
         }
 
-        // 同步用户信息缓存
-        // 同步app端用户信息缓存
+
         try {
+            // 同步用户信息缓存
+            // 同步app端用户信息缓存
             jedisClient.hdel(APP_USER_INFO_KEY, JWTUtil.validToken(token));
+
+            // 获取该用户加入的trip, 更新trip中的followers缓存
+            String userId = useres.get(0).getId();
+
+            // 更新行程详情中的跟随者缓存
+            refreshFollowersCache(userId);
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return TripResult.ok();
+    }
+
+
+    /**
+     * 更新行程详情中的跟随者缓存
+     * @param userId
+     */
+    @Override
+    public void refreshFollowersCache(String userId) {
+        // 当用户为发起者
+        SponsorExample sponsorExample = new SponsorExample();
+        SponsorExample.Criteria sponsorCriteria = sponsorExample.createCriteria();
+        sponsorCriteria.andUserIdEqualTo(userId);
+        List<Sponsor> sponsors = sponsorMapper.selectByExample(sponsorExample);
+
+        for (Sponsor sponsor: sponsors) {
+            String tripId = sponsor.getId();
+            jedisClient.hdel(TRIP_FOLLOWERS, tripId);
+        }
+
+        // 当用户为跟随者
+        FollowerExample followerExample = new FollowerExample();
+        FollowerExample.Criteria followerCriteria = followerExample.createCriteria();
+        followerCriteria.andUserIdEqualTo(userId);
+        List<Follower> followers = followerMapper.selectByExample(followerExample);
+
+        for (Follower follower: followers) {
+            String tripId = follower.getSponsorId();
+            jedisClient.hdel(TRIP_FOLLOWERS, tripId);
+        }
     }
 }

@@ -11,4 +11,6 @@ import com.cppteam.common.util.TripResult;
 
 public interface UserService {
     TripResult refreshInfo(String token, String encryptedData, String iv);
+
+    void refreshFollowersCache(String userId);
 }
