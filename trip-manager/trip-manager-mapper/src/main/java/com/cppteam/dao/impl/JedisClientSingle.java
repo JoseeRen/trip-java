@@ -34,6 +34,22 @@ public class JedisClientSingle implements JedisClient {
 	}
 
 	@Override
+	public Boolean exists(String key) {
+		Jedis jedis = jedisPool.getResource();
+		Boolean exists = jedis.exists(key);
+		jedis.close();
+		return exists;
+	}
+
+	@Override
+	public Set<String> keys(String pattern) {
+		Jedis jedis = jedisPool.getResource();
+		Set<String> keys = jedis.keys(pattern);
+		jedis.close();
+		return keys;
+	}
+
+	@Override
 	public String hget(String hkey, String key) {
 		Jedis jedis = jedisPool.getResource();
 		String string = jedis.hget(hkey, key);

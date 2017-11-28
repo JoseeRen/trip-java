@@ -295,6 +295,20 @@ public class JourneyServiceImpl implements JourneyService {
             record.setStatus(status);
             journeyMapper.updateByPrimaryKeySelective(record);
 
+            try {
+                // 清除redis缓存
+                // app用户的游记列表缓存
+                Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + creatorId);
+                for (String key: hkeys) {
+                    jedisClient.hdel(APP_JOURNEY_LIST_KEY + creatorId, key);
+                }
+
+                // 更新小程序查询游记列表缓存
+                updateXcxJourneyListCache(journey);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             return TripResult.ok();
         } catch (Exception e) {
             e.printStackTrace();

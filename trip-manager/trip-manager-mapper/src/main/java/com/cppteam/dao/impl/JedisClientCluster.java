@@ -27,6 +27,16 @@ public class JedisClientCluster implements JedisClient {
 	}
 
 	@Override
+	public Boolean exists(String key) {
+		return jedisCluster.exists(key);
+	}
+
+	@Override
+	public Set<String> keys(String pattern) {
+		return null;
+	}
+
+	@Override
 	public String hget(String hkey, String key) {
 		return jedisCluster.hget(hkey, key);
 	}

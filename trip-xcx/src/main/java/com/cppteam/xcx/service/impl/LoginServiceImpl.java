@@ -41,6 +41,8 @@ public class LoginServiceImpl implements LoginService {
 
 	@Value("${SESSION_KEY}")
 	private String SESSION_KEY;
+	@Value("${REDIS_EXPIRE_TIME}")
+	private Integer REDIS_EXPIRE_TIME;
 
 	@Autowired
 	private UserMapper userMapper;
@@ -108,10 +110,12 @@ public class LoginServiceImpl implements LoginService {
 			String sessionKey = (String) map.get("session_key");
 
 			// 如果redis中已经有该用户的旧会话密钥，删除之
-            if (StringUtils.isNotBlank(jedisClient.hget(SESSION_KEY, token))) {
-                jedisClient.hdel(SESSION_KEY, token);
+            if (jedisClient.exists(SESSION_KEY + token)) {
+                jedisClient.del(SESSION_KEY + token);
             }
-            jedisClient.hset(SESSION_KEY, token, sessionKey);
+            jedisClient.set(SESSION_KEY + token, sessionKey);
+            // 在redis中保存session_key，声明周期为30分钟
+            jedisClient.expire(SESSION_KEY + token, REDIS_EXPIRE_TIME);
 
 			return TripResult.ok("ok", resultMap);
 		}

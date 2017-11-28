@@ -25,6 +25,20 @@ public interface JedisClient {
     String set(String key, String value);
 
     /**
+     * 某个key是否存在
+     * @param key
+     * @return
+     */
+    Boolean exists(String key);
+
+    /**
+     *
+     * @param pattern
+     * @return
+     */
+    Set<String> keys(String pattern);
+
+    /**
      * 取出hash键值对
      * @param hkey
      * @param key

@@ -208,9 +208,9 @@ public class JourneyServiceImpl implements JourneyService {
 
         // 先尝试在缓存中读取
         try {
-            String hget = jedisClient.hget(FOUND_JOURNEY_LIST_KEY, cacheKey);
-            if (StringUtils.isNotBlank(hget)) {
-                Object result = SerializeUtil.unSerialize(hget);
+            String obj = jedisClient.hget(FOUND_JOURNEY_LIST_KEY, cacheKey);
+            if (StringUtils.isNotBlank(obj)) {
+                Object result = SerializeUtil.unSerialize(obj);
                 return TripResult.ok("获取成功", result);
             }
         } catch (Exception e) {
@@ -261,10 +261,9 @@ public class JourneyServiceImpl implements JourneyService {
         // 查询结果加入缓存中
         try {
             synchronized (CLASS_LOCK) {
-                Boolean hexists = jedisClient.hexists(FOUND_JOURNEY_LIST_KEY, cacheKey);
-                if (!hexists) {
+                Boolean exists = jedisClient.hexists(FOUND_JOURNEY_LIST_KEY, cacheKey);
+                if (!exists) {
                     jedisClient.hset(FOUND_JOURNEY_LIST_KEY, cacheKey, SerializeUtil.serialize(result));
-
                 }
             }
         } catch (Exception e) {
@@ -321,9 +320,9 @@ public class JourneyServiceImpl implements JourneyService {
         // 从缓存中通过行程id获取游记的详情
         List<Day> days = null;
         try {
-            String hget = jedisClient.hget(JOURNEY_CONTENT_BY_TRIPID, tripId);
-            if (StringUtils.isNotBlank(hget)) {
-                days = (List<Day>) SerializeUtil.unSerialize(hget);
+            String obj = jedisClient.get(JOURNEY_CONTENT_BY_TRIPID + tripId);
+            if (StringUtils.isNotBlank(obj)) {
+                days = (List<Day>) SerializeUtil.unSerialize(obj);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -352,9 +351,11 @@ public class JourneyServiceImpl implements JourneyService {
             // 将游记详情存入缓存中
             try {
                 synchronized (CLASS_LOCK) {
-                    Boolean hexists = jedisClient.hexists(JOURNEY_CONTENT_BY_TRIPID, tripId);
-                    if (!hexists) {
-                        jedisClient.hset(JOURNEY_CONTENT_BY_TRIPID, tripId, SerializeUtil.serialize(days));
+                    Boolean exists = jedisClient.exists(JOURNEY_CONTENT_BY_TRIPID + tripId);
+                    if (!exists) {
+                        jedisClient.set(JOURNEY_CONTENT_BY_TRIPID + tripId, SerializeUtil.serialize(days));
+                        // 设置缓存过期时间为30分钟
+                        jedisClient.expire(JOURNEY_CONTENT_BY_TRIPID + tripId, REDIS_EXPIRE_TIME);
                     }
                 }
             } catch (Exception e) {
@@ -365,9 +366,9 @@ public class JourneyServiceImpl implements JourneyService {
         // 从缓存中通过tripId获取该行程的跟随者
         List<com.cppteam.xcx.pojo.Follower> followers = null;
         try {
-            String hget = jedisClient.hget(TRIP_FOLLOWERS, tripId);
-            if (StringUtils.isNotBlank(hget)) {
-                followers = (List<com.cppteam.xcx.pojo.Follower>) SerializeUtil.unSerialize(hget);
+            String obj = jedisClient.get(TRIP_FOLLOWERS + tripId);
+            if (StringUtils.isNotBlank(obj)) {
+                followers = (List<com.cppteam.xcx.pojo.Follower>) SerializeUtil.unSerialize(obj);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -391,9 +392,10 @@ public class JourneyServiceImpl implements JourneyService {
             // 将跟随者列表存入缓缓存中
             try {
                 synchronized (CLASS_LOCK) {
-                    Boolean hexists = jedisClient.hexists(TRIP_FOLLOWERS, tripId);
-                    if (!hexists) {
-                        jedisClient.hset(TRIP_FOLLOWERS, tripId, SerializeUtil.serialize(followers));
+                    Boolean exists = jedisClient.exists(TRIP_FOLLOWERS + tripId);
+                    if (!exists) {
+                        jedisClient.set(TRIP_FOLLOWERS + tripId, SerializeUtil.serialize(followers));
+                        jedisClient.expire(TRIP_FOLLOWERS + tripId, REDIS_EXPIRE_TIME);
                     }
                 }
 

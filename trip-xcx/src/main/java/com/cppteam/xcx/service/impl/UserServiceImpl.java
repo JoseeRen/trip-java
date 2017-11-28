@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
             return TripResult.build(400,"缺少参数");
         }
         //从缓存中获取session_key
-        String session_key=jedisClient.hget( SESSION_KEY, token);
+        String session_key=jedisClient.get(SESSION_KEY + token);
         if(StringUtils.isBlank(session_key)){
             return TripResult.build(400,"找不到session_key,刷新数据失败");
         }
@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
         try {
             // 同步用户信息缓存
             // 同步app端用户信息缓存
-            jedisClient.hdel(APP_USER_INFO_KEY, JWTUtil.validToken(token));
+            jedisClient.del(APP_USER_INFO_KEY + JWTUtil.validToken(token));
 
             // 获取该用户加入的trip, 更新trip中的followers缓存
             String userId = useres.get(0).getId();
@@ -148,7 +148,7 @@ public class UserServiceImpl implements UserService {
 
         for (Sponsor sponsor: sponsors) {
             String tripId = sponsor.getId();
-            jedisClient.hdel(TRIP_FOLLOWERS, tripId);
+            jedisClient.del(TRIP_FOLLOWERS + tripId);
         }
 
         // 当用户为跟随者
@@ -159,7 +159,7 @@ public class UserServiceImpl implements UserService {
 
         for (Follower follower: followers) {
             String tripId = follower.getSponsorId();
-            jedisClient.hdel(TRIP_FOLLOWERS, tripId);
+            jedisClient.del(TRIP_FOLLOWERS + tripId);
         }
     }
 }

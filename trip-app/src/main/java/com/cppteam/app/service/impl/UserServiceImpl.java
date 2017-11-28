@@ -26,13 +26,15 @@ public class UserServiceImpl implements UserService {
     private String APP_USER_INFO_KEY;
     @Value("${DEFAULT_NULL}")
     private String DEFAULT_NULL;
+    @Value("${REDIS_EXPIRE_TIME}")
+    private Integer REDIS_EXPIRE_TIME;
 
     @Override
     public TripResult getUserInfo(String token) {
         String userId = JWTUtil.validToken(token);
         // 尝试从缓存中读取
         try {
-            String res = jedisClient.hget(APP_USER_INFO_KEY, userId);
+            String res = jedisClient.get(APP_USER_INFO_KEY + userId);
             if (StringUtils.isNotBlank(res)) {
                 return TripResult.ok("获取用户信息成功", SerializeUtil.unSerialize(res));
             }
@@ -49,7 +51,8 @@ public class UserServiceImpl implements UserService {
 
         // 存入缓存
         try {
-            jedisClient.hset(APP_USER_INFO_KEY, userId, SerializeUtil.serialize(user));
+            jedisClient.set(APP_USER_INFO_KEY + userId, SerializeUtil.serialize(user));
+            jedisClient.expire(APP_USER_INFO_KEY + userId, REDIS_EXPIRE_TIME);
         } catch (Exception e) {
             e.printStackTrace();
         }

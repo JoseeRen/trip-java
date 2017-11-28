@@ -42,6 +42,7 @@ public class UploadTest {
                     .addPart("image", bin)
                     .build();
             httpPost.setConfig(requestConfig);
+            long l = System.currentTimeMillis();
             httpPost.setEntity(reqEntinty);
 
             // 发起请求 并返回请求的响应
@@ -61,6 +62,8 @@ public class UploadTest {
             byte[] bytes1 = baos.toByteArray();
             String s = new String(bytes1);
             System.out.println(s);
+            long l1 = System.currentTimeMillis();
+            System.err.println((l1 - l)/1000);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {

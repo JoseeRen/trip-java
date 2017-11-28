@@ -27,9 +27,13 @@ public class SiteServiceImpl implements SiteService {
     private String MINI_PRO_SITE_KEY;
     @Value("${DEFAULT_NULL}")
     private String DEFAULT_NULL;
+    @Value("${REDIS_EXPIRE_TIME}")
+    private Integer REDIS_EXPIRE_TIME;
 
     @Autowired
     private SiteMapper siteMapper;
+
+    private static final Class CLASS_LOCK = SiteServiceImpl.class;
     
     /**
      * 获取地点详细信息
@@ -41,9 +45,9 @@ public class SiteServiceImpl implements SiteService {
 
         // 从缓存中读取
         try {
-            String siteJson = jedisClient.hget(MINI_PRO_SITE_KEY, siteId);
-            if (StringUtils.isNotBlank(siteJson)) {
-                return TripResult.ok("ok", SerializeUtil.unSerialize(siteJson));
+            String obj = jedisClient.get(MINI_PRO_SITE_KEY + siteId);
+            if (StringUtils.isNotBlank(obj)) {
+                return TripResult.ok("ok", SerializeUtil.unSerialize(obj));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,7 +75,14 @@ public class SiteServiceImpl implements SiteService {
 
         // 存入redis缓存中
         try{
-            jedisClient.hset(MINI_PRO_SITE_KEY, siteId, SerializeUtil.serialize(site));
+            synchronized (CLASS_LOCK) {
+                Boolean exists = jedisClient.exists(MINI_PRO_SITE_KEY + siteId);
+                if (!exists) {
+                    jedisClient.set(MINI_PRO_SITE_KEY + siteId, SerializeUtil.serialize(site));
+                    jedisClient.expire(MINI_PRO_SITE_KEY + siteId, REDIS_EXPIRE_TIME);
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
