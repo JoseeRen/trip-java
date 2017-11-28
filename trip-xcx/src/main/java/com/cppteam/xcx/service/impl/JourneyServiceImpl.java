@@ -300,7 +300,7 @@ public class JourneyServiceImpl implements JourneyService {
         }
 
         // 封装结果
-        Map<String, Object> result = new HashMap<String, Object>(3);
+        Map<String, Object> result = new HashMap<>(3);
         result.put("page", pageNum);
         result.put("total", total);
         result.put("list", journeys);

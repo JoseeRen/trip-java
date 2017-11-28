@@ -1,5 +1,6 @@
 package com.cppteam.dao;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -63,6 +64,13 @@ public interface JedisClient {
     Long incr(String key);
 
     /**
+     * 减1
+     * @param key
+     * @return
+     */
+    Long decr(String key);
+
+    /**
      * 设置过期时间
      * @param key
      * @param second
@@ -102,6 +110,58 @@ public interface JedisClient {
      * @return
      */
     Boolean hexists(String hkey, String field);
+
+    /**
+     * 向有序列表中添加一个成员
+     * @param key
+     * @param score
+     * @param member
+     * @return
+     */
+    Long zadd(String key, Double score, String member);
+
+    /**
+     * 向有序列表中加入成员
+     * @param key
+     * @param scoreMembers
+     * @return
+     */
+    Long zadd(String key, Map<String, Double> scoreMembers);
+
+    /**
+     * 指定范围在有序列表中获取一组成员，score升序
+     * @param key
+     * @param start
+     * @param end
+     * @return
+     */
+    Set<String> zrange(String key, Long start, Long end);
+
+    /**
+     * 指定范围在有序列表中获取一组成员，score降序
+     * @param key
+     * @param start
+     * @param end
+     * @return
+     */
+    Set<String> zrevrange(String key, Long start, Long end);
+
+    /**
+     * 移除有序列表中指定范围内的成员
+     * @param key
+     * @param start
+     * @param end
+     * @return
+     */
+    Long zremrangeByRank(String key,Long start, Long end);
+
+    /**
+     * 移除有序列表中的指定元素
+     * @param key
+     * @param members
+     * @return
+     */
+    Long zrem(String key, String... members);
 
 }
 

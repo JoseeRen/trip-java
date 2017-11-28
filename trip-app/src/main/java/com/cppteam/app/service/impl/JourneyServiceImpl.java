@@ -50,6 +50,8 @@ public class JourneyServiceImpl implements JourneyService {
     private String APP_JOURNEY_LIST_KEY;
     @Value("${XCX_FOUND_JOURNEY_LIST_KEY}")
     private String XCX_FOUND_JOURNEY_LIST_KEY;
+    @Value("${APP_JOURNEY_TOTAL}")
+    private String APP_JOURNEY_TOTAL;
     @Value("${DEFAULT_NULL}")
     private String DEFAULT_NULL;
 
@@ -62,16 +64,30 @@ public class JourneyServiceImpl implements JourneyService {
 
         // 从缓存中读取数据
         try {
-            String s = jedisClient.hget(APP_JOURNEY_LIST_KEY + userId, page + "_" + count);
-            if (StringUtils.isNotBlank(s)) {
-                Object data = SerializeUtil.unSerialize(s);
-                return TripResult.ok("获取成功", data);
+            Set<String> set = jedisClient.zrevrange(APP_JOURNEY_LIST_KEY + userId, (long) ((page - 1) * count), (long) count);
+            if (!set.isEmpty()) {
+                // 从缓存中分页获取记录，并反序列化为对象装入List中
+                List<Object> result = new LinkedList<>();
+                for (String obj: set) {
+                    result.add(SerializeUtil.unSerialize(obj));
+                }
+                Collections.reverse(result);
+
+                // 从缓存中获取总记录数
+                long total = Long.parseLong(jedisClient.get(APP_JOURNEY_TOTAL));
+
+                // 返回缓存中的数据
+                Map<String, Object> data = new HashMap<>(3);
+                data.put("list", result);
+                data.put("total", total);
+                data.put("page", page);
+                return TripResult.ok("ok", data);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
+        // 从数据库中查询数据
         JourneyExample journeyExample = new JourneyExample();
         JourneyExample.Criteria criteria = journeyExample.createCriteria();
 
@@ -93,7 +109,7 @@ public class JourneyServiceImpl implements JourneyService {
 
         List<Journey> journeys = journeyMapper.selectByExample(journeyExample);
         if (journeys.isEmpty()) {
-            return TripResult.build(404, "游记列表为空");
+            return TripResult.build(404, "没有更多数据了");
         }
 
         // 取分页结果
@@ -102,26 +118,31 @@ public class JourneyServiceImpl implements JourneyService {
         long total = listJourney.getTotal();
         int pageNum = listJourney.getPageNum();
 
+        // 放入缓存中
+        // key : `app_journey_list_key : userId `
+        // member : 序列化的data
+        try {
+            Map<String, Double> scoreMembers = new HashMap<>();
+            for (Journey journey: result) {
+                // 使用时间戳作为score批量存放到redis中
+                scoreMembers.put(SerializeUtil.serialize(journey), (double) journey.getCreateTime().getTime());
+            }
+            jedisClient.zadd(APP_JOURNEY_LIST_KEY + userId, scoreMembers);
+
+            // 数据库记录总数缓存
+            jedisClient.set(APP_JOURNEY_TOTAL + userId, total + "");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // 封装结果集
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>(3);
 
         data.put("page", pageNum);
         data.put("total", total);
         data.put("list", result);
 
-
-        // 放入缓存中
-        // hkey : `app_journey_list_key : userId `
-        // key : `page_count`
-        // value : 序列化的data
-        try {
-            jedisClient.hset(APP_JOURNEY_LIST_KEY + userId, page + "_" + count, SerializeUtil.serialize(data));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        return TripResult.ok("获取成功", data);
+        return TripResult.ok("ok", data);
     }
 
     /**
@@ -160,12 +181,12 @@ public class JourneyServiceImpl implements JourneyService {
             journeyMapper.updateByPrimaryKey(journey);
 
             try {
-                // 清除redis缓存
-                // app用户的游记列表缓存
-                Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + userId);
-                for (String key: hkeys) {
-                    jedisClient.hdel(APP_JOURNEY_LIST_KEY + userId, key);
-                }
+                // 从缓存中清除该记录
+                journey.setStatus(status);
+                jedisClient.zrem(APP_JOURNEY_LIST_KEY + userId, SerializeUtil.serialize(journey));
+
+                // 缓存记录数-1
+                jedisClient.decr(APP_JOURNEY_TOTAL + userId);
 
                 // 更新小程序查询游记列表缓存
                 updateXcxJourneyListCache(journey);
@@ -242,9 +263,9 @@ public class JourneyServiceImpl implements JourneyService {
         }
 
         // dayList 用于批量insert
-        List<Day> dayList = new ArrayList<Day>();
+        List<Day> dayList = new ArrayList<>();
         // siteList 用于批量insert
-        List<Site> siteList = new ArrayList<Site>();
+        List<Site> siteList = new ArrayList<>();
         for (DayForm dayForm: days) {
             Day day = new Day();
             BeanUtils.copyProperties(dayForm, day, "sites");
@@ -289,7 +310,7 @@ public class JourneyServiceImpl implements JourneyService {
                 sitesMapper.batchInsert(siteList);
             }
 
-            // 更新status
+            // 更新status为原来的状态
             Journey record = new Journey();
             record.setId(journeyId);
             record.setStatus(status);
@@ -297,13 +318,10 @@ public class JourneyServiceImpl implements JourneyService {
 
             try {
                 // 清除redis缓存
-                // app用户的游记列表缓存
-                Set<String> hkeys = jedisClient.hkeys(APP_JOURNEY_LIST_KEY + creatorId);
-                for (String key: hkeys) {
-                    jedisClient.hdel(APP_JOURNEY_LIST_KEY + creatorId, key);
-                }
+                // app用户的游记列表缓存, 清除所有
+                jedisClient.zremrangeByRank(APP_JOURNEY_LIST_KEY + creatorId, 0L, -1L);
 
-                // 更新小程序查询游记列表缓存
+                // 更新小程序查询游记列表缓存, 将同校同类型同天数的缓存清除
                 updateXcxJourneyListCache(journey);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -340,20 +358,24 @@ public class JourneyServiceImpl implements JourneyService {
      * @param journey collegeId, dayNum, type
      */
     private void updateXcxJourneyListCache(Journey journey) {
-        Set<String> hkeys;// 更新小程序查找游记列表的缓存
+
         Integer collegeCid = journey.getCollegeCid();
         Integer dayNum = journey.getDayNum();
         String type = journey.getType();
+
         String keyPrefix = collegeCid + "_" + type + "_" + dayNum;
-        hkeys = jedisClient.hkeys(XCX_FOUND_JOURNEY_LIST_KEY);
+        Set<String> hkeys = jedisClient.hkeys(XCX_FOUND_JOURNEY_LIST_KEY);
+
         // key的定义：collegeId + "_" + type + "_" + dayNum + "-" + page + "_" + count
         for (String key: hkeys) {
             // 如果key的collegeId、type、dayNum与该篇删除的游记相同，则刷新该key下的缓存
             String k = key;
             String prefix = k.substring(0, key.indexOf("-"));
+
             if (keyPrefix.equals(prefix)) {
                 jedisClient.hdel(XCX_FOUND_JOURNEY_LIST_KEY, key);
             }
+
         }
     }
 }

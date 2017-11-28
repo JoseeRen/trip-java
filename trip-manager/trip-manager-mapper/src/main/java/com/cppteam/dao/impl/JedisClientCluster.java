@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import redis.clients.jedis.JedisCluster;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,6 +52,17 @@ public class JedisClientCluster implements JedisClient {
 		return jedisCluster.incr(key);
 	}
 
+	/**
+	 * 减1
+	 *
+	 * @param key
+	 * @return
+	 */
+	@Override
+	public Long decr(String key) {
+		return jedisCluster.decr(key);
+	}
+
 	@Override
 	public Long expire(String key, int second) {
 		return jedisCluster.expire(key, second);
@@ -85,6 +97,82 @@ public class JedisClientCluster implements JedisClient {
 			e.printStackTrace();
 		}
 		return hexists;
+	}
+
+	/**
+	 * 向有序列表中添加一个成员
+	 *
+	 * @param key
+	 * @param score
+	 * @param member
+	 * @return
+	 */
+	@Override
+	public Long zadd(String key, Double score, String member) {
+		return jedisCluster.zadd(key, score, member);
+	}
+
+	/**
+	 * 向有序列表中加入成员
+	 *
+	 * @param key
+	 * @param scoreMembers
+	 * @return
+	 */
+	@Override
+	public Long zadd(String key, Map<String, Double> scoreMembers) {
+		return jedisCluster.zadd(key, scoreMembers);
+	}
+
+	/**
+	 * 指定范围在有序列表中获取一组成员，score升序
+	 *
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	@Override
+	public Set<String> zrange(String key, Long start, Long end) {
+		return jedisCluster.zrange(key, start, end);
+	}
+
+	/**
+	 * 指定范围在有序列表中获取一组成员，score降序
+	 *
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	@Override
+	public Set<String> zrevrange(String key, Long start, Long end) {
+		return jedisCluster.zrevrange(key, start, end);
+	}
+
+	/**
+	 * 移除有序列表中指定范围内的成员
+	 *
+	 * @param key
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	@Override
+	public Long zremrangeByRank(String key, Long start, Long end) {
+		return jedisCluster.zremrangeByRank(key, start, end);
+	}
+
+	/**
+	 * 移除有序列表中的指定元素
+	 *
+	 * @param key
+	 * @param members
+	 * @return
+	 */
+	@Override
+	public Long zrem(String key, String... members) {
+		return jedisCluster.zrem(key, members);
 	}
 
 }

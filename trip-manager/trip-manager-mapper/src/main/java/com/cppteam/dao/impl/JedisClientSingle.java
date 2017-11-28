@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -73,6 +74,20 @@ public class JedisClientSingle implements JedisClient {
 		return result;
 	}
 
+	/**
+	 * 减1
+	 *
+	 * @param key
+	 * @return
+	 */
+	@Override
+	public Long decr(String key) {
+		Jedis jedis = jedisPool.getResource();
+		Long result = jedis.decr(key);
+		jedis.close();
+		return result;
+	}
+
 	@Override
 	public Long expire(String key, int second) {
 		Jedis jedis = jedisPool.getResource();
@@ -120,5 +135,62 @@ public class JedisClientSingle implements JedisClient {
 		jedis.close();
 		return hexists;
 	}
+
+	@Override
+	public Long zadd(String key, Double score, String member) {
+		Jedis jedis = jedisPool.getResource();
+		Long zadd = jedis.zadd(key, score, member);
+		jedis.close();
+		return zadd;
+	}
+
+	@Override
+	public Long zadd(String key, Map<String, Double> scoreMembers) {
+		Jedis jedis = jedisPool.getResource();
+		Long zadd = jedis.zadd(key, scoreMembers);
+		jedis.close();
+		return zadd;
+	}
+
+	@Override
+	public Set<String> zrange(String key, Long start, Long end) {
+		Jedis jedis = jedisPool.getResource();
+		Set<String> zrange = jedis.zrange(key, start, end);
+
+		jedis.close();
+		return zrange;
+	}
+
+	@Override
+	public Set<String> zrevrange(String key, Long start, Long end) {
+		Jedis jedis = jedisPool.getResource();
+		Set<String> zrevrange = jedis.zrevrange(key, start, end);
+		jedis.close();
+		return zrevrange;
+	}
+
+	@Override
+	public Long zremrangeByRank(String key, Long start, Long end) {
+		Jedis jedis = jedisPool.getResource();
+		Long byRank = jedis.zremrangeByRank(key, start, end);
+		jedis.close();
+		return byRank;
+	}
+
+	/**
+	 * 移除有序列表中的指定元素
+	 *
+	 * @param key
+	 * @param members
+	 * @return
+	 */
+	@Override
+	public Long zrem(String key, String... members) {
+		Jedis jedis = jedisPool.getResource();
+		Long zrem = jedis.zrem(key, members);
+		jedis.close();
+		return zrem;
+	}
+
 
 }
