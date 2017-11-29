@@ -4,6 +4,7 @@ import com.cppteam.app.pojo.JourneyForm;
 import com.cppteam.common.util.TripResult;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 
 /**
  * 游记服务接口
@@ -44,4 +45,6 @@ public interface JourneyService {
      * @return
      */
     public TripResult showJourney(String token, String journeyId);
+
+    TripResult showCreatedByTime(String token, Date createTime, Integer count);
 }

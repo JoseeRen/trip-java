@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Date;
 
 /**
  * 游记Controller
@@ -28,6 +29,23 @@ public class JourneyController {
     @RequestMapping(value = "/list")
     public TripResult listTrips(@RequestHeader("Authorization") String token, Integer page, Integer count) {
         return journeyService.listTrips(token, page, count);
+    }
+
+    /**
+     *  APP
+     *  获得给定创建时间后的游记列表
+     * @param token
+     * @param createTime 创建时间
+     * @param count 返回条数
+     * @return
+     */
+    @RequestMapping("/showCreatedByTime")
+    public TripResult showCreatedByTime(@RequestHeader("Authorization") String token,String createTime,
+                                        @RequestParam(value="count",required = false,defaultValue = "10") Integer count){
+        if(createTime==null){
+            return listTrips(token,1,count);
+        }
+        return journeyService.showCreatedByTime(token,new Date(Long.parseLong(createTime)),count);
     }
 
     /**

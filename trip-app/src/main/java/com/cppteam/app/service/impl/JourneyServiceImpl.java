@@ -144,7 +144,37 @@ public class JourneyServiceImpl implements JourneyService {
 
         return TripResult.ok("ok", data);
     }
+    @Override
+    public TripResult showCreatedByTime(String token, Date createTime, Integer count) {
+        String userId = JWTUtil.validToken(token);
+        //1.添加筛选条件
+        JourneyExample journeyExample=new JourneyExample();
+        JourneyExample.Criteria criteria =journeyExample.createCriteria();
+        //1.1 当前用户
+        criteria.andCreatorIdEqualTo(userId);
+        //1.2 审核通过或未审核
+        List<Integer> status=new ArrayList<Integer>();
+        status.add(0);//未审核
+        status.add(1);//审核通过
+        criteria.andStatusIn(status);
+        //1.3 给定时间戳之后
+        criteria.andCreateTimeLessThan(createTime);
 
+        //2.添加排序条件:按插入时间降序排列
+        journeyExample.setOrderByClause("create_time desc");
+        //3.添加分页条件
+        PageHelper.startPage(1,count);
+
+        List<Journey> journeys=journeyMapper.selectByExample(journeyExample);
+        if(journeys.isEmpty()){
+            return TripResult.build(404,"游记为空");
+        }
+        Map<String ,Object> map=new HashMap<>();
+        map.put("num",journeys.size());
+        map.put("list",journeys);
+
+        return TripResult.ok("获取成功",map);
+    }
     /**
      * 删除游记
      * @param token
@@ -351,6 +381,8 @@ public class JourneyServiceImpl implements JourneyService {
 
         return TripResult.ok("ok", journeyForm);
     }
+
+
 
 
     /**
